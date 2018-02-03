@@ -1,0 +1,14 @@
+package ${package};
+
+${imports}
+
+/**
+ * (xxx)Service
+ * \@Description (xxx)Service 
+ * \@ClassName   ${className} 
+ * \@Date        ${date(),"yyyy-MM-dd HH:mm:ss"}
+ * \@Author      开发人员xxx
+ */
+public interface ${className} {
+
+}

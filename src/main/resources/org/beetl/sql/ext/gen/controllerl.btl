@@ -1,0 +1,22 @@
+package ${package};
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.talkweb.controller.common.BasicsController;
+
+
+/**
+ * (xxx)Controller
+ * \@Description (xxx)Controller 
+ * \@ClassName   ${className} 
+ * \@Date        ${date(),"yyyy-MM-dd HH:mm:ss"}
+ * \@Author      开发人员xxx
+ */
+\@Controller
+\@RequestMapping(value = "/${className}")
+public class ${className} extends BasicsController{
+
+}

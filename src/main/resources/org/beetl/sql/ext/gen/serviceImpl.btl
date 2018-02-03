@@ -1,0 +1,18 @@
+package ${package};
+
+${imports1}
+${imports2}
+${imports3}
+
+
+/**
+ * (xxx)ServiceImpl
+ * \@Description (xxx)ServiceImpl 
+ * \@ClassName   ${className} 
+ * \@Date        ${date(),"yyyy-MM-dd HH:mm:ss"}
+ * \@Author      开发人员xxx
+ */
+\@Service("${className}")
+public interface ${classNameImpl} implements ${className}{
+
+}

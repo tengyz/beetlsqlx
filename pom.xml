@@ -1,0 +1,326 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.ibeetl</groupId>
+	<artifactId>beetlsqlx</artifactId>
+	<version>2.0-SNAPSHOT</version>
+
+	<name>com.ibeetl:beetlsql</name>
+	<url>http://maven.apache.org</url>
+	<description>java DAO tool eXtensions</description>
+
+	<properties>
+		<java-version>1.7</java-version>
+		<spring.version>4.2.3.RELEASE</spring.version>
+		<aspectj.version>1.6.11</aspectj.version>
+	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+	</properties>
+	
+
+	<dependencies>
+		<dependency>
+			<groupId>com.ibeetl</groupId>
+			<artifactId>beetl</artifactId>
+			<version>2.7.15</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<!-- junit -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.hamcrest</groupId>
+			<artifactId>hamcrest-core</artifactId>
+			<version>1.3</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Java Servlet -->
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<version>3.1.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jdbc</artifactId>
+			<version>4.2.3.RELEASE</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>4.2.3.RELEASE</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<version>4.2.3.RELEASE</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+		    <groupId>mysql</groupId>
+		    <artifactId>mysql-connector-java</artifactId>
+		    <version>6.0.5</version>
+		    <scope>provided</scope>
+		</dependency>
+
+		<!--dependency>
+			<groupId>com.microsoft.sqlserver</groupId>
+			<artifactId>sqljdbc4</artifactId>
+			<version>4.0</version>
+			<scope>system</scope>
+		   <systemPath>${basedir}/lib/sqljdbc4.jar</systemPath>
+		</dependency>-->
+
+		<!-- <dependency>
+		<groupId>oracle</groupId>
+		<artifactId>oralce-express</artifactId>
+		<version>6</version>
+		<scope>system</scope>
+		<systemPath>${basedir}/lib/ojdbc6-11.2.0.1.0.jar</systemPath>
+		</dependency> -->
+
+
+		<!--  dependency>
+			<groupId>db2</groupId>
+			<artifactId>driver</artifactId>
+			<version>6</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/lib/db2jcc.jar</systemPath>
+		</dependency-->
+		
+		<!--  dependency>
+		<groupId>db2</groupId>
+		<artifactId>driver-license</artifactId>
+		<version>6</version>
+		<scope>system</scope>
+		<systemPath>${basedir}/lib/db2jcc_license_cu.jar</systemPath>
+		</dependency-->
+
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>druid</artifactId>
+			<version>1.0.21</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+            <groupId>c3p0</groupId>
+            <artifactId>c3p0</artifactId>
+            <version>0.9.1.2</version>
+            <scope>provided</scope>
+        </dependency>
+
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjrt</artifactId>
+			<version>${aspectj.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjweaver</artifactId>
+			<version>${aspectj.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.jfinal</groupId>
+			<artifactId>jfinal</artifactId>
+			<version>3.0</version>
+			<scope>provided</scope>
+		</dependency>
+	
+		<dependency>
+			<groupId>postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>9.1-901-1.jdbc4</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+			<version>4.2.3.RELEASE</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-beans</artifactId>
+			<version>4.2.3.RELEASE</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>4.2.3.RELEASE</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<version>4.2.3.RELEASE</version>
+			<scope>provided</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>javax.persistence</groupId>
+			<artifactId>persistence-api</artifactId>
+			<version>1.0.2</version>
+			<scope>provided</scope>
+		</dependency>
+		
+		<dependency>
+		    <groupId>com.ibeetl</groupId>
+		    <artifactId>ormunit</artifactId>
+		    <version>1.0.0</version>
+		    <scope>test</scope>
+		</dependency>
+		<!-- dependency> <groupId>org.apache</groupId> <artifactId>dbc-mysql-sqlserver</artifactId> 
+			<version>4.1</version> <scope>system</scope> <systemPath>${basedir}/lib/jdbc-mysql-sqlserver-4.1.jar</systemPath> 
+			</dependency -->
+		<!--用于进行测试 -->
+		<!-- <dependency>
+			<groupId>com.ibeetl</groupId>
+			<artifactId>ormunit</artifactId>
+			<version>1.0.0</version>
+			<scope>test</scope>
+		</dependency> -->
+		
+		<!--wade IDATA,IDataSet tool-->  
+		<dependency>
+			<groupId>com.wade</groupId>
+			<artifactId>wadetool-data</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+	</dependencies>
+	
+
+	<build>
+		 <resources>
+	        <resource>
+	            <directory>src/main/resources</directory>
+	            <excludes>
+	                <exclude>sql/**</exclude>
+	            </excludes>
+	        </resource>
+	    </resources>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>${java-version}</source>
+					<target>${java-version}</target>
+					<encoding>${project.build.sourceEncoding}</encoding>
+					<excludes>
+	                    <exclude>org/beetl/sql/test/**</exclude>
+	                </excludes>
+				</configuration>
+			</plugin>
+			<!-- <plugin>
+				<groupId>org.sonatype.plugins</groupId>
+				<artifactId>nexus-staging-maven-plugin</artifactId>
+				<version>1.6.3</version>
+				<extensions>true</extensions>
+				<configuration>
+					<serverId>snapshots</serverId>
+					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+					<autoReleaseAfterClose>true</autoReleaseAfterClose>
+				</configuration>
+			</plugin> -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.16</version>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+
+			<!-- Source -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.2.1</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+<!--
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.9.1</version>
+				<configuration>
+					<charset>utf-8</charset>
+					<encoding>utf-8</encoding>
+
+					<quiet>true</quiet>
+				</configuration>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>1.5</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+ -->
+		</plugins>
+	</build>
+
+	
+	<!-- 配置远程发布到私服，mvn deploy -->
+		<distributionManagement>
+	        <repository>
+	            <id>nexus-releases</id>
+	            <name>Nexus Release Repository</name>
+	            <url>http://220.168.18.94:8081/nexus/content/repositories/releases/</url>
+	        </repository>
+	        <snapshotRepository>
+			    <id>snapshots</id>
+			    <name>Nexus Snapshot Repository</name>
+			    <url>http://220.168.18.94:8081/nexus/content/repositories/snapshots/</url>
+			</snapshotRepository>
+	    </distributionManagement>
+
+
+</project>
+  
