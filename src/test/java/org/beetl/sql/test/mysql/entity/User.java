@@ -2,14 +2,25 @@ package org.beetl.sql.test.mysql.entity;
 
 import org.beetl.sql.core.TailBean;
 
+import java.util.Date;
+
 public class User  extends TailBean{
 	private Integer id ;
 	private Integer departmentId ;
 	private String name ;
+	private Date createTime ;
 	
 	public User() {
 	}
-	
+
+	public Date getCreateTime() {
+		return createTime;
+	}
+
+	public void setCreateTime(Date createTime) {
+		this.createTime = createTime;
+	}
+
 	public Integer getId(){
 		return  id;
 	}

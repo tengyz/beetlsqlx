@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.beetl.sql.core.SQLManager;
 import org.beetl.sql.core.db.KeyHolder;
+import org.beetl.sql.core.engine.PageQuery;
+import org.beetl.sql.core.query.Query;
 
 /**
  * BaseMapper.
@@ -83,6 +85,15 @@ public interface BaseMapper<T> {
 	 * @return
 	 */
 	T single(Object key);
+	
+	
+	/**
+	 * 根据主键获取对象，如果在事物中执行会添加数据库行级锁(select * from table where id = ? for update)，如果对象不存在，返回null
+	 * @param key
+	 * @return
+	 */
+	T lock(Object key);
+	
 	/**
 	 * 返回实体对应的所有数据库记录
 	 * @return
@@ -117,6 +128,8 @@ public interface BaseMapper<T> {
 	<T> T templateOne(T entity);
 
 	List<T> template(T entity,int start,int size);
+	
+	void templatePage(PageQuery<T> query);
 	/**
 	 * 符合模板得个数
 	 * @param entity
@@ -141,10 +154,12 @@ public interface BaseMapper<T> {
 	 */
 	int executeUpdate(String sql,Object... args );
 	
-	
 	SQLManager getSQLManager();
-
 	
-	
+	/**
+	 * 返回一个Query对象
+	 * @return
+	 */
+	Query<T> createQuery();
 
 }

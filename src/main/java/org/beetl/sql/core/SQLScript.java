@@ -28,6 +28,7 @@ import org.beetl.sql.core.db.TableDesc;
 import org.beetl.sql.core.engine.SQLParameter;
 import org.beetl.sql.core.kit.BeanKit;
 import org.beetl.sql.core.kit.CaseInsensitiveOrderSet;
+import org.beetl.sql.core.kit.StringKit;
 import org.beetl.sql.core.mapping.BeanProcessor;
 import org.beetl.sql.core.mapping.RowMapperResultSetExt;
 import org.beetl.sql.core.orm.LazyMappingEntity;
@@ -38,8 +39,6 @@ import org.beetl.sql.core.orm.OrmQuery;
 import com.wade.framework.data.IDataList;
 import com.wade.framework.data.IDataMap;
 import com.wade.framework.data.impl.DataArrayList;
-
- 
 
 public class SQLScript {
     
@@ -61,6 +60,24 @@ public class SQLScript {
         this.sm = sm;
         this.id = sqlSource.getId();
         this.dbName = sm.getDbStyle().getName();
+        
+    }
+    
+    private static boolean isBaseDataType(Class<?> clazz) {
+        if (clazz.isPrimitive()) {
+            return true;
+        }
+        
+        if (clazz.getName().startsWith("java")) {
+            return ((clazz == String.class) || clazz == Integer.class || clazz == Byte.class || clazz == Long.class || clazz == Double.class
+                    || clazz == Float.class || clazz == Character.class || clazz == Short.class || clazz == BigDecimal.class
+                    || clazz == BigInteger.class || clazz == Boolean.class || clazz == java.util.Date.class || clazz == java.sql.Date.class
+                    || clazz == java.sql.Timestamp.class);
+        }
+        else {
+            return false;
+        }
+        
     }
     
     protected SQLResult run(Map<String, Object> paras) {
@@ -98,6 +115,7 @@ public class SQLScript {
     
     /**
      * 检查目标类是否有申明ormquery,如果有，改写result.mapingEntrys
+     *
      * @param target
      */
     private void addOrmQuery(Class target, SQLResult result) {
@@ -115,8 +133,14 @@ public class SQLScript {
         Map<String, MappingEntity> map = new HashMap<String, MappingEntity>();
         
         for (OrmCondition cond : condtions) {
+            MappingEntity mappingEntity = null;
             //类配合的orm查询总是
-            MappingEntity mappingEntity = new LazyMappingEntity();
+            if (cond.lazy()) {
+                mappingEntity = new LazyMappingEntity();
+            }
+            else {
+                mappingEntity = new MappingEntity();
+            }
             mappingEntity.setSingle(cond.type() == OrmQuery.Type.ONE);
             mappingEntity.setTarget(cond.target().getName());
             if (cond.alias().length() != 0) {
@@ -136,7 +160,7 @@ public class SQLScript {
             for (MappingEntity entity : result.mapingEntrys) {
                 String mapTarget = entity.getTarget();
                 if (mapTarget.indexOf('.') == -1) {
-                    mapTarget = target.getPackage().getName().concat(".").concat(mapTarget);
+                    mapTarget = BeanKit.getPackageName(target).concat(".").concat(mapTarget);
                     entity.setTarget(mapTarget);
                 }
                 if (map.keySet().contains(mapTarget)) {
@@ -206,15 +230,15 @@ public class SQLScript {
             if (conn == null) {
                 conn = sm.getDs().getConn(id, true, sql, objs);
             }
-            
-            if (this.sqlSource.getIdType() == DBStyle.ID_ASSIGN) {
+            int idType = ((SQLTableSource)sqlSource).getIdType();
+            if (idType == DBStyle.ID_ASSIGN) {
                 ps = conn.prepareStatement(sql);
             }
-            else if (this.sqlSource.getIdType() == DBStyle.ID_AUTO) {
+            else if (idType == DBStyle.ID_AUTO) {
                 ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             }
-            else if (this.sqlSource.getIdType() == DBStyle.ID_SEQ) {
-                CaseInsensitiveOrderSet idCols = (CaseInsensitiveOrderSet)this.sqlSource.getTableDesc().getIdNames();
+            else if (idType == DBStyle.ID_SEQ) {
+                CaseInsensitiveOrderSet idCols = (CaseInsensitiveOrderSet)((SQLTableSource)sqlSource).getTableDesc().getIdNames();
                 if (idCols.size() != 1) {
                     throw new BeetlSQLException(BeetlSQLException.ID_EXPECTED_ONE_ERROR);
                 }
@@ -228,7 +252,7 @@ public class SQLScript {
             
             int ret = ps.executeUpdate();
             
-            if (this.sqlSource.getIdType() == DBStyle.ID_AUTO || this.sqlSource.getIdType() == DBStyle.ID_SEQ) {
+            if (idType == DBStyle.ID_AUTO || idType == DBStyle.ID_SEQ) {
                 ResultSet seqRs = ps.getGeneratedKeys();
                 seqRs.next();
                 Object key = seqRs.getObject(1);
@@ -334,15 +358,6 @@ public class SQLScript {
         return this.select(clazz, map);
     }
     
-    /**
-     * 分页查询
-     * @param clazz
-     * @param paras
-     * @param mapper
-     * @return
-     * @Date        2017年6月9日 上午9:28:41 
-     * @Author      yz.teng
-     */
     public <T> List<T> select(Class<T> clazz, Map<String, Object> paras, RowMapper<T> mapper) {
         SQLResult result = run(paras);
         addOrmQuery(clazz, result);
@@ -369,8 +384,7 @@ public class SQLScript {
             
             if (mapper != null) {
                 BeanProcessor beanProcessor = this.getBeanProcessor();
-                resultList = new RowMapperResultSetExt<T>(mapper, beanProcessor).handleResultSet(rs, clazz);
-                this.callInterceptorAsAfter(ctx, resultList);
+                resultList = new RowMapperResultSetExt<T>(mapper, beanProcessor).handleResultSet(this.id, rs, clazz);
                 
             }
             else {
@@ -379,10 +393,10 @@ public class SQLScript {
             }
             this.callInterceptorAsAfter(ctx, resultList);
             if (mapper == null) {
-                //1.5.0 feature 
+                //1.5.0 feature
                 if (result.mapingEntrys != null) {
                     for (MappingEntity mapConf : result.mapingEntrys) {
-                        mapConf.map(resultList, sm);
+                        mapConf.map(resultList, sm, paras);
                     }
                 }
             }
@@ -412,6 +426,7 @@ public class SQLScript {
             // 如果是Map的子类或者父类，返回List<Map<String,Object>>
             resultList = new ArrayList<T>();
             while (rs.next()) {
+                
                 Map map = beanProcessor.toMap(this.sqlSource.getId(), clazz, rs);
                 resultList.add((T)map);
             }
@@ -431,33 +446,9 @@ public class SQLScript {
             resultList = beanProcessor.toBeanList(this.sqlSource.getId(), rs, clazz);
             return resultList;
         }
+        
         return resultList;
-    }
-    
-    /**
-     * 转换成IDataList
-     * @param rs
-     * @param clazz
-     * @return IDataList结果集
-     * @throws SQLException
-     * @Date        2017年6月11日 下午7:14:53 
-     * @Author      yz.teng
-     */
-    @SuppressWarnings("unchecked")
-    public IDataList mappingSelectIDataMap(ResultSet rs, Class clazz) throws SQLException {
-        IDataList resultList = null;
-        BeanProcessor beanProcessor = this.getBeanProcessor();
-        //类型判断需要做性能优化
-        if (IDataMap.class.isAssignableFrom(clazz)) {
-            // 如果是Map的子类或者父类，返回List<Map<String,Object>>
-            resultList = new DataArrayList();
-            while (rs.next()) {
-                IDataMap map = beanProcessor.toIDataMap(this.sqlSource.getId(), clazz, rs);
-                resultList.add(map);
-            }
-            return resultList;
-        }
-        return resultList;
+        
     }
     
     private BeanProcessor getBeanProcessor() {
@@ -473,22 +464,6 @@ public class SQLScript {
         }
         else {
             return sm.getDefaultBeanProcessors();
-        }
-        
-    }
-    
-    private static boolean isBaseDataType(Class<?> clazz) {
-        if (clazz.isPrimitive()) {
-            return true;
-        }
-        
-        if (clazz.getName().startsWith("java")) {
-            return ((clazz == String.class) || clazz == Integer.class || clazz == Byte.class || clazz == Long.class || clazz == Double.class
-                    || clazz == Float.class || clazz == Character.class || clazz == Short.class || clazz == BigDecimal.class
-                    || clazz == BigInteger.class || clazz == Boolean.class || clazz == java.util.Date.class || clazz == java.sql.Date.class || clazz == java.sql.Timestamp.class);
-        }
-        else {
-            return false;
         }
         
     }
@@ -638,42 +613,65 @@ public class SQLScript {
         if (list.size() == 0) {
             return new int[0];
         }
-        int[] rs = null;
-        PreparedStatement ps = null;
         Connection conn = null;
+        InterceptorContext lastCtx = null;
+        int[] jdbcRets = new int[list.size()];
         // 执行jdbc
-        InterceptorContext ctx = null;
         try {
-            
+            //记录不同sql对应的PreparedStatement
+            Map<String, PreparedStatement> batchPs = new HashMap<String, PreparedStatement>();
+            //上下文
+            Map<String, InterceptorContext> batchCtx = new HashMap<String, InterceptorContext>();
+            //不同sql产生的批处理结果，汇总到jdbcRets
+            Map<String, List<Integer>> batchRet = new HashMap<String, List<Integer>>();
             for (int k = 0; k < list.size(); k++) {
                 Map<String, Object> paras = new HashMap<String, Object>();
                 paras.put("_root", list.get(k));
                 SQLResult result = run(paras);
                 List<SQLParameter> objs = result.jdbcPara;
-                
+                PreparedStatement ps = batchPs.get(result.jdbcSql);
+                List<Integer> rets = batchRet.get(result.jdbcSql);
+                InterceptorContext ctx = batchCtx.get(result.jdbcSql);
                 if (ps == null) {
                     conn = sm.getDs().getConn(id, true, result.jdbcSql, objs);
                     ps = conn.prepareStatement(result.jdbcSql);
-                    ctx = this.callInterceptorAsBefore(this.id, result.jdbcSql, true, new ArrayList<SQLParameter>(0), paras);
+                    ctx = new InterceptorContext(id, result.jdbcSql, new ArrayList<SQLParameter>(0), paras, true);
+                    rets = new ArrayList<Integer>();
+                    batchCtx.put(result.jdbcSql, ctx);
+                    batchPs.put(result.jdbcSql, ps);
+                    batchRet.put(result.jdbcSql, rets);
                 }
                 
                 this.setPreparedStatementPara(ps, objs);
-                
                 ps.addBatch();
-                
+                rets.add(k);
+                ctx.getParas().add(new SQLParameter(objs));
             }
-            rs = ps.executeBatch();
-            this.callInterceptorAsAfter(ctx, rs);
+            
+            for (Entry<String, PreparedStatement> entry : batchPs.entrySet()) {
+                PreparedStatement ps = entry.getValue();
+                lastCtx = batchCtx.get(entry.getKey());
+                List<Integer> rets = batchRet.get(entry.getKey());
+                for (Interceptor in : sm.inters) {
+                    in.before(lastCtx);
+                }
+                int[] rs = ps.executeBatch();
+                for (int i = 0; i < rs.length; i++) {
+                    int realIndex = rets.get(i);
+                    jdbcRets[realIndex] = rs[i];
+                }
+                this.callInterceptorAsAfter(lastCtx, rs);
+            }
             
         }
         catch (SQLException e) {
-            this.callInterceptorAsException(ctx, e);
+            this.callInterceptorAsException(lastCtx, e);
             throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
         }
         finally {
-            clean(true, conn, ps);
+            clean(conn);
         }
-        return rs;
+        return jdbcRets;
     }
     
     public <T> T unique(Class<T> clazz, RowMapper<T> mapper, Object objId) {
@@ -721,6 +719,7 @@ public class SQLScript {
                         throw new BeetlSQLException(BeetlSQLException.UNIQUE_EXCEPT_ERROR, "unique查询，但数据库未找到结果集");
                     }
                     else {
+                        this.callInterceptorAsAfter(ctx, ctx.getResult());
                         return null;
                     }
                 }
@@ -728,10 +727,10 @@ public class SQLScript {
                 if (mapper != null) {
                     model = mapper.mapRow(model, rs, 1);
                 }
-                //orm 
+                //orm
                 if (model != null && result.mapingEntrys != null) {
                     for (MappingEntity mapConf : result.mapingEntrys) {
-                        mapConf.map(model, sm);
+                        mapConf.singleMap(model, sm);
                     }
                 }
             }
@@ -799,7 +798,7 @@ public class SQLScript {
         ResultSet rs = null;
         PreparedStatement ps = null;
         List<T> resultList = null;
-        InterceptorContext ctx = this.callInterceptorAsBefore(this.id, sql, true, objs, this.getSQLReadyParas(Arrays.asList(p.getArgs())));
+        InterceptorContext ctx = this.callInterceptorAsBefore(this.id, sql, false, objs, this.getSQLReadyParas(Arrays.asList(p.getArgs())));
         sql = ctx.getSql();
         objs = ctx.getParas();
         Connection conn = null;
@@ -810,41 +809,6 @@ public class SQLScript {
             rs = ps.executeQuery();
             resultList = mappingSelect(rs, clazz);
             
-            this.callInterceptorAsAfter(ctx, resultList);
-            return resultList;
-        }
-        catch (SQLException e) {
-            this.callInterceptorAsException(ctx, e);
-            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
-        }
-        finally {
-            clean(false, conn, ps, rs);
-        }
-    }
-    
-    /**
-     * 根据sql语句jdbc查询
-     * @param p
-     * @return IDataList结果集
-     * @Date        2017年6月11日 下午7:16:52 
-     * @Author      yz.teng
-     */
-    public IDataList queryList(SQLReady p) {
-        String sql = this.sql;
-        List<SQLParameter> objs = toSQLParameters(p.getArgs());
-        ResultSet rs = null;
-        PreparedStatement ps = null;
-        IDataList resultList = null;
-        InterceptorContext ctx = this.callInterceptorAsBefore(this.id, sql, true, objs, this.getSQLReadyParas(Arrays.asList(p.getArgs())));
-        sql = ctx.getSql();
-        objs = ctx.getParas();
-        Connection conn = null;
-        try {
-            conn = sm.getDs().getConn(id, false, sql, objs);
-            ps = conn.prepareStatement(sql);
-            this.setPreparedStatementPara(ps, objs);
-            rs = ps.executeQuery();
-            resultList = mappingSelectIDataMap(rs, IDataMap.class);
             this.callInterceptorAsAfter(ctx, resultList);
             return resultList;
         }
@@ -906,8 +870,11 @@ public class SQLScript {
                     
                     if (conn != null) {
                         // colse 不一定能保证能自动commit
-                        if (isUpdate && !conn.getAutoCommit())
+                        if (isUpdate && !conn.getAutoCommit()) {
+                            
                             conn.commit();
+                        }
+                        
                         conn.close();
                     }
                 }
@@ -981,6 +948,7 @@ public class SQLScript {
     
     /**
      * 为主键设置参数
+     *
      * @param desc
      * @param obj
      * @param paras
@@ -1017,15 +985,22 @@ public class SQLScript {
         if (obj == null) {
             return;
         }
+        SQLTableSource tableSource = (SQLTableSource)this.sqlSource;
         Class clz = obj.getClass();
-        if (this.sqlSource.getIdType() == DBStyle.ID_ASSIGN && sqlSource.getAssignIds() != null) {
-            Map<String, AssignID> ids = sqlSource.getAssignIds();
+        if (tableSource.getIdType() == DBStyle.ID_ASSIGN && tableSource.getAssignIds() != null) {
+            Map<String, AssignID> ids = tableSource.getAssignIds();
             for (Entry<String, AssignID> entry : ids.entrySet()) {
                 String attrName = entry.getKey();
+                Object value = BeanKit.getBeanProperty(obj, attrName);
+                // 已经有值的列尊重调用者设置的值，@lidaoguang
+                // 严格判断 null 和 empty 的 value，支持 ID 类型为 String 或者 Char 类型的情况 @larrykoo
+                if (!StringKit.isNullOrEmpty(value)) {
+                    continue;
+                }
                 AssignID assignId = entry.getValue();
                 String algorithm = assignId.value();
                 String param = assignId.param();
-                Object o = this.sm.getAssignIdByIdAutonGen(algorithm, param, sqlSource.getTableDesc().getName());
+                Object o = this.sm.getAssignIdByIdAutonGen(algorithm, param, tableSource.getTableDesc().getName());
                 BeanKit.setBeanProperty(obj, o, attrName);
                 
             }
@@ -1038,12 +1013,74 @@ public class SQLScript {
         List<SQLParameter> paras = new ArrayList<SQLParameter>(args.length);
         for (Object arg : args) {
             paras.add(new SQLParameter(arg));
+            
         }
         return paras;
     }
     
     public String getSql() {
         return sql;
+    }
+    
+    /**
+     * 根据sql语句jdbc查询
+     * @param p
+     * @return IDataList结果集
+     * @Date        2017年6月11日 下午7:16:52 
+     * @Author      yz.teng
+     */
+    public IDataList queryList(SQLReady p) {
+        String sql = this.sql;
+        List<SQLParameter> objs = toSQLParameters(p.getArgs());
+        ResultSet rs = null;
+        PreparedStatement ps = null;
+        IDataList resultList = null;
+        InterceptorContext ctx = this.callInterceptorAsBefore(this.id, sql, true, objs, this.getSQLReadyParas(Arrays.asList(p.getArgs())));
+        sql = ctx.getSql();
+        objs = ctx.getParas();
+        Connection conn = null;
+        try {
+            conn = sm.getDs().getConn(id, false, sql, objs);
+            ps = conn.prepareStatement(sql);
+            this.setPreparedStatementPara(ps, objs);
+            rs = ps.executeQuery();
+            resultList = mappingSelectIDataMap(rs, IDataMap.class);
+            this.callInterceptorAsAfter(ctx, resultList);
+            return resultList;
+        }
+        catch (SQLException e) {
+            this.callInterceptorAsException(ctx, e);
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            clean(false, conn, ps, rs);
+        }
+    }
+    
+    /**
+     * 转换成IDataList
+     * @param rs
+     * @param clazz
+     * @return IDataList结果集
+     * @throws SQLException
+     * @Date        2017年6月11日 下午7:14:53 
+     * @Author      yz.teng
+     */
+    @SuppressWarnings("unchecked")
+    public IDataList mappingSelectIDataMap(ResultSet rs, Class clazz) throws SQLException {
+        IDataList resultList = null;
+        BeanProcessor beanProcessor = this.getBeanProcessor();
+        //类型判断需要做性能优化
+        if (IDataMap.class.isAssignableFrom(clazz)) {
+            // 如果是Map的子类或者父类，返回List<Map<String,Object>>
+            resultList = new DataArrayList();
+            while (rs.next()) {
+                IDataMap map = beanProcessor.toIDataMap(this.sqlSource.getId(), clazz, rs);
+                resultList.add(map);
+            }
+            return resultList;
+        }
+        return resultList;
     }
     
 }

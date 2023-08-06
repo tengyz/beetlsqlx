@@ -43,8 +43,8 @@ public class SourceGen {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		conf.setStatementStart("@");
-		conf.setStatementEnd(null);
+		conf.setStatementStart("<%");
+		conf.setStatementEnd("%>");
 		gt = new GroupTemplate(new StringTemplateResourceLoader(),conf);
 		srcHead+="import java.math.*;"+CR;
 		srcHead+="import java.util.Date;"+CR;
@@ -142,6 +142,7 @@ public class SourceGen {
 		Template template = gt.getTemplate(config.template);
 		template.binding("attrs", attrs);
 		template.binding("className", className);
+		template.binding("table",table);
 		template.binding("ext", ext);
 		template.binding("package", pkg);
 		template.binding("imports", srcHead);
@@ -174,6 +175,9 @@ public class SourceGen {
 	}
 	
 	private String getMethodName(String name){
+		if(name.length()==1){
+			return name.toUpperCase();
+		}
 		char ch1 = name.charAt(0);
 		char ch2 = name.charAt(1);
 		if(Character.isLowerCase(ch1)&&Character.isUpperCase(ch2)){

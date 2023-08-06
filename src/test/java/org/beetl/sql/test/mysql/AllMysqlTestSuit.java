@@ -10,7 +10,7 @@ import org.junit.runners.Suite;
 	InsertTest.class,
 	MapperTest.class,
 	OrmTest.class,
-	TypeTest.class
+	MapperMoreTest.class,
 })  
 
 public class AllMysqlTestSuit {

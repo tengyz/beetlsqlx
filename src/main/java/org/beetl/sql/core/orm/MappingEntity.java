@@ -1,15 +1,8 @@
 package org.beetl.sql.core.orm;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
+import org.beetl.core.exception.BeetlException;
+import org.beetl.core.om.MethodInvoker;
+import org.beetl.core.om.PojoMethodInvoker;
 import org.beetl.sql.core.SQLManager;
 import org.beetl.sql.core.SQLReady;
 import org.beetl.sql.core.Tail;
@@ -18,6 +11,10 @@ import org.beetl.sql.core.db.TableDesc;
 import org.beetl.sql.core.kit.BeanKit;
 import org.beetl.sql.core.kit.CaseInsensitiveOrderSet;
 import org.beetl.sql.core.kit.StringKit;
+
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.Map.Entry;
 
 
 /**
@@ -41,15 +38,15 @@ public class MappingEntity implements java.io.Serializable {
 
 	
    Map<String,List> cache = new HashMap<String,List>();
-   public void map(Object o, SQLManager sm) {
-	   this.map(Arrays.asList(o), sm);
+   public void singleMap(Object o, SQLManager sm) {
+	   this.map(Arrays.asList(o), sm,Collections.EMPTY_MAP);
    }
-	public void map(List list, SQLManager sm) {
+	public void map(List list, SQLManager sm,Map paras) {
 		if(list.size()==0){
 			return ;
 		}
 		
-		init(list.get(0));
+		init(list.get(0), sm.getEntityLoader());
 		if(mapkey.size()==1){
 			//有可能是主键映射
 			String tableName = sm.getNc().getTableName(targetClass);
@@ -67,7 +64,7 @@ public class MappingEntity implements java.io.Serializable {
 		
 		
 		for (Object obj : list) {
-			mapClassItem(obj, sm);
+			mapClassItem(obj, sm,paras);
 
 		}
 
@@ -122,7 +119,7 @@ public class MappingEntity implements java.io.Serializable {
 		
 	}
 
-	protected void init(Object obj) {
+	protected void init(Object obj,ClassLoader loader) {
 		if (target.indexOf(".") == -1) {
 			absentPackage = true;
 		
@@ -139,18 +136,15 @@ public class MappingEntity implements java.io.Serializable {
 			}
 		}
 		//缺少包名,则认为是跟关系对象同一个包名
-		String fullName = absentPackage ? obj.getClass().getPackage().getName() + "." + target : target;
-		targetClass = getCls(fullName);
+		String fullName = absentPackage ? BeanKit.getPackageName(obj.getClass()) + "." + target : target;
+		targetClass = getCls(fullName,loader);
 	}
 
 
 
-	protected void mapClassItem(Object obj, SQLManager sm) {
-		
-	    
+	protected void mapClassItem(Object obj, SQLManager sm,Map sqlParas) {
 		List ret = null;
 		StringBuilder key = new StringBuilder();
-		
 		if (sqlId != null) {
 			Map<String,Object> paras = new HashMap<String,Object>();
 			for (Entry<String, String> entry : this.mapkey.entrySet()) {
@@ -160,6 +154,10 @@ public class MappingEntity implements java.io.Serializable {
 				paras.put(targetAttr, value);
 				key.append(value).append("_");
 				
+			}
+			if(sqlParas!=null&&!sqlParas.isEmpty()) {
+				//外部参数，非映射参数
+				paras.putAll(sqlParas);
 			}
 			String cacheKey = key.toString();
 			if(cache.containsKey(cacheKey)){
@@ -210,13 +208,24 @@ public class MappingEntity implements java.io.Serializable {
 	
 
 	protected void setTailAttr(Object o, Object value) {
-		if (o instanceof Tail) {
+		
+		MethodInvoker setter = BeanKit.getMethodInvokerProperty(o,tailName);
+		
+		if(setter!= null&& setter instanceof PojoMethodInvoker) {
+			try {
+				setter.set(o, value);
+			}catch(BeetlException ex) {
+				throw new RuntimeException(ex);
+			}
+			
+		}
+		else if (o instanceof Tail) {
 			((Tail) o).set(tailName, value);
 		} else {
 			// annotation
 			Method m = BeanKit.getTailMethod(o.getClass());
 			if (m == null) {
-				throw new RuntimeException("must implement tail or use @tail");
+				throw new RuntimeException("OR/Mapping 找不到对应的setter方法:"+tailName+",请设置setter方法或者实现Tail接口，采用@Tail注解");
 			}
 			try {
 				m.invoke(o, tailName, value);
@@ -237,26 +246,22 @@ public class MappingEntity implements java.io.Serializable {
 
 	}
 
-	protected Class getCls(String fullName) {
-		Class cls = null;
-
+	protected Class getCls(String fullName,ClassLoader loader) {
 		try {
-			cls = Class.forName(fullName);
-			return cls;
-		} catch (Exception ex) {
-			ClassLoader loader = Thread.currentThread().getContextClassLoader();
-			if (loader != null) {
-				try {
-					cls = loader.loadClass(fullName);
-					return cls;
-				} catch (Exception e) {
-					throw new RuntimeException(e);
-				}
-
-			} else {
-				throw new RuntimeException(ex);
+		    if(loader!=null) {
+		        return loader.loadClass(fullName);
+		    }
+			loader = Thread.currentThread().getContextClassLoader();
+			if(loader!=null) {
+				return loader.loadClass(fullName);
+			}else {
+				return this.getClass().forName(fullName);
 			}
+		}catch(Exception ex) {
+			throw new RuntimeException(ex);
 		}
+		
+		
 	}
 
 	public String getTarget() {

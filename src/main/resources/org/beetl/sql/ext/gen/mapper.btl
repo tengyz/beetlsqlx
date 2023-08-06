@@ -4,15 +4,10 @@ import org.beetl.sql.core.db.KeyHolder;
 import org.beetl.sql.core.engine.PageQuery;
 import org.beetl.sql.core.mapper.BaseMapper;
 ${imports}
-
-
-/**
- * (xxx)Dao
- * \@Description (xxx)Dao 
- * \@ClassName   ${className} 
- * \@Date        ${date(),"yyyy-MM-dd HH:mm:ss"}
- * \@Author      开发人员xxx
- */
+/*
+* 
+* gen by beetlsql mapper ${date(),"yyyy-MM-dd"}
+*/
 public interface ${className} extends BaseMapper<${entityClass}> {
 	
 }

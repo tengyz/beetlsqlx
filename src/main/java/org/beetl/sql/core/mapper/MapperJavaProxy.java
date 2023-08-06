@@ -1,13 +1,14 @@
 package org.beetl.sql.core.mapper;
 
-import org.beetl.sql.core.SQLManager;
-import org.beetl.sql.core.mapper.builder.MapperConfig;
-import org.beetl.sql.core.mapper.builder.MapperInvokeDataConfig;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+
+import org.beetl.sql.core.SQLManager;
+import org.beetl.sql.core.annotatoin.SqlResource;
+import org.beetl.sql.core.mapper.builder.MapperConfig;
+import org.beetl.sql.core.mapper.builder.MapperInvokeDataConfig;
 
 /**
  * Java代理实现.
@@ -31,6 +32,8 @@ public class MapperJavaProxy implements InvocationHandler {
 
 
     protected MapperConfig mapperConfig;
+    
+    private Class mapperInterface;
 
     /**
      * The Constructor.
@@ -49,6 +52,7 @@ public class MapperJavaProxy implements InvocationHandler {
         this.sqlManager = sqlManager;
         this.builder = builder;
         this.mapperInterface(mapperInterface);
+        this.mapperInterface = mapperInterface;
     }
 
 
@@ -123,10 +127,25 @@ public class MapperJavaProxy implements InvocationHandler {
      */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        String sqlId = this.builder.getIdGen().getId(entityClass, method);
-        Class c = method.getDeclaringClass();
+        Class caller = method.getDeclaringClass();
         String methodName = method.getName();
-        MapperInvoke invoke = sqlManager.getMapperConfig().getAmi(c, methodName);
+        if(methodName.equals("toString")){
+        	return "BeetlSql Mapper "+mapperInterface;
+        }
+        SqlResource resource = (SqlResource)this.mapperInterface.getAnnotation(SqlResource.class);
+        String sqlId = null;
+        if(resource!=null){
+        		String preffix = resource.value();
+        		String name = method.getName();
+        		sqlId = preffix+"."+name;
+        }else{
+        		sqlId = this.builder.getIdGen().getId(method.getDeclaringClass(),entityClass, method);
+            
+        }
+        
+       
+        
+        MapperInvoke invoke = sqlManager.getMapperConfig().getAmi(caller, methodName);
         if (invoke != null) {
             //内置的方法，直接调用Invoke
             return invoke.call(this.sqlManager, this.entityClass, sqlId, method, args);
@@ -135,12 +154,11 @@ public class MapperJavaProxy implements InvocationHandler {
             //解析方法以及注解，找到对应的处理类
             MethodDesc desc = MethodDesc.getMetodDesc(sqlManager, this.entityClass, method, sqlId);
             if (desc.sqlReady.length() == 0) {
-
                 invoke = MapperInvokeDataConfig.getMethodDescProxy(desc.type);
                 Object ret = invoke.call(this.sqlManager, this.entityClass, sqlId, method, args);
                 return ret;
             } else {
-                invoke = new SQLReadyExecuteMapperInvoke(desc.type);
+                invoke = MapperInvokeDataConfig.getSQLReadyProxy();;
                 Object ret = invoke.call(this.sqlManager, this.entityClass, desc.sqlReady, method, args);
                 return ret;
             }
@@ -148,6 +166,10 @@ public class MapperJavaProxy implements InvocationHandler {
         }
 
 
+    }
+    
+    public String toString(){
+    	return " Proxy";
     }
 
 

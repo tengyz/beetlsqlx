@@ -5,25 +5,54 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.beetl.core.om.MethodInvoker;
 import org.beetl.core.om.ObjectUtil;
+import org.beetl.sql.core.JavaType;
 import org.beetl.sql.core.annotatoin.Tail;
 
 import com.wade.framework.data.IDataMap;
 import com.wade.framework.data.impl.DataHashMap;
 
- 
-
 public class BeanKit {
+    //目前没有合适放的地方，忽略
+    //	public static String BEETL_VERSION = "beetlsql";
+    //	static{
+    //		URL url = GroupTemplate.class.getResource("/org/beetl/core/beetl-default.properties");
+    //		if(url.getProtocol().equals("jar")){
+    //			String path = url.getPath();
+    //			int index = path.indexOf(".jar!");
+    //			int i = path.lastIndexOf("beetlsql-", index);
+    //			
+    //		}
+    //	}
+    public static boolean queryLambdasSupport = false;
+    static {
+        //https://github.com/TrigerSoft/jaque
+        String clsName = "com.trigersoft.jaque.expression.LambdaExpression";
+        if (JavaType.isJdk8()) {
+            queryLambdasSupport = true;
+        }
+        try {
+            Class.forName(clsName);
+        }
+        catch (Exception ex) {
+            queryLambdasSupport = false;
+        }
+        
+    }
+    
     private static final Map<Class, Method> tailBeans = new ConcurrentHashMap<Class, Method>();
     
     private static Method NULL = null;
+    
     static {
         try {
             NULL = Object.class.getMethod("toString", new Class[] {});
@@ -109,7 +138,7 @@ public class BeanKit {
         }
         List<Method> list = new ArrayList<Method>();
         for (PropertyDescriptor p : ps) {
-            if (p.getReadMethod() != null && p.getWriteMethod() != null) {
+            if (p.getReadMethod() != null && BeanKit.getWriteMethod(p, c) != null) {
                 list.add(p.getReadMethod());
             }
         }
@@ -144,27 +173,7 @@ public class BeanKit {
                 return null;
             }
         }
-    }
-    
-    /**
-     * 初始化空的IDataMap
-     * @param cls
-     * @return
-     * @Date        2017年6月11日 下午7:25:37 
-     * @Author      yz.teng
-     */
-    public static IDataMap getIDataMapIns(Class cls) {
-        if (cls == IDataMap.class) {
-            return new DataHashMap();
-        }
-        else {
-            try {
-                return (IDataMap)cls.newInstance();
-            }
-            catch (Exception e) {
-                return null;
-            }
-        }
+        
     }
     
     public static List getListIns(Class list) {
@@ -193,6 +202,11 @@ public class BeanKit {
         }
     }
     
+    public static MethodInvoker getMethodInvokerProperty(Object o, String attrName) {
+        
+        return ObjectUtil.getInvokder(o.getClass(), attrName);
+    }
+    
     public static void setBeanProperty(Object o, Object value, String attrName) {
         
         MethodInvoker inv = ObjectUtil.getInvokder(o.getClass(), attrName);
@@ -201,8 +215,9 @@ public class BeanKit {
     }
     
     public static Object convertValueToRequiredType(Object result, Class<?> requiredType) {
-        if (result == null)
+        if (result == null) {
             return null;
+        }
         Class type = result.getClass();
         if (type == result) {
             //大多数情况，都是这样
@@ -214,7 +229,7 @@ public class BeanKit {
         //判断Number对象所表示的类或接口是否与requiredType所表示的类或接口是否相同，或者是否是其超类或者超接口
         else if (Number.class.isAssignableFrom(requiredType)) {
             if (result instanceof Number) {
-                return NumberKit.convertNumberToTargetClass(((Number)result), (Class<Number>)requiredType);
+                return NumberKit.convertNumberToTargetClass((Number)result, (Class<Number>)requiredType);
             }
             else {
                 return NumberKit.parseNumber(result.toString(), (Class<Number>)requiredType);
@@ -222,7 +237,7 @@ public class BeanKit {
         }
         else if (requiredType.isPrimitive()) {
             if (result instanceof Number) {
-                return NumberKit.convertNumberToTargetClass(((Number)result), requiredType);
+                return NumberKit.convertNumberToTargetClass((Number)result, requiredType);
             }
         }
         
@@ -239,6 +254,146 @@ public class BeanKit {
         } while (c != null);
         return null;
         
+    }
+    
+    public static <T extends Annotation> T getAnnoation(Class c, String property, Method getter, Class<T> annotationClass) {
+        T t = getter.getAnnotation(annotationClass);
+        if (t != null) {
+            return t;
+        }
+        else {
+            try {
+                
+                Field f = c.getDeclaredField(property);
+                t = f.getAnnotation(annotationClass);
+                return t;
+            }
+            catch (Exception e) {
+                return null;
+            }
+            
+        }
+    }
+    
+    public static <T extends Annotation> T getAnnoation(Class c, String property, Class<T> annotationClass) {
+        MethodInvoker invoker = ObjectUtil.getInvokder(c, property);
+        if (invoker == null) {
+            return null;
+        }
+        
+        Method getter = invoker.getMethod();
+        return getAnnoation(c, property, getter, annotationClass);
+        
+    }
+    
+    public static List<Annotation> getAllAnnoation(Class c, String property) {
+        MethodInvoker invoker = ObjectUtil.getInvokder(c, property);
+        if (invoker == null) {
+            return null;
+        }
+        
+        Method getter = invoker.getMethod();
+        Annotation[] array1 = getter.getAnnotations();
+        Annotation[] array2 = null;
+        Field f = getField(c, property);
+        if (f != null) {
+            array2 = f.getAnnotations();
+        }
+        
+        return addAnnotation(array1, array2);
+        
+    }
+    
+    /**
+     * 根据Class 和 property 获取自身或父类的 Field
+     *
+     * @param c
+     * @param property
+     * @return
+     */
+    private static Field getField(Class c, String property) {
+        Field field = null;
+        if (c != null) {
+            try {
+                field = c.getDeclaredField(property);
+            }
+            catch (Exception e) {
+                //当前Class获取不到时尝试从父类中获取
+                field = getField(c.getSuperclass(), property);
+            }
+        }
+        return field;
+    }
+    
+    private static List<Annotation> addAnnotation(Annotation[] array1, Annotation[] array2) {
+        List<Annotation> list = new ArrayList<Annotation>();
+        if (array1 != null) {
+            list.addAll(Arrays.asList(array1));
+        }
+        
+        if (array2 != null) {
+            list.addAll(Arrays.asList(array2));
+        }
+        return list;
+        
+    }
+    
+    /**
+     * 获取prop的setter方法
+     *
+     * @param prop
+     * @param type
+     * @return
+     */
+    public static Method getWriteMethod(PropertyDescriptor prop, Class<?> type) {
+        Method writeMethod = prop.getWriteMethod();
+        //当使用lombok等链式编程方式时 有返回值的setter不被认为是writeMethod，需要自己去获取
+        if (writeMethod == null && !"class".equals(prop.getName())) {
+            String propName = prop.getName();
+            //符合JavaBean规范的set方法名称（userName=>setUserName,uName=>setuName）
+            String setMethodName = "set" + (propName.length() > 1 && propName.charAt(1) >= 'A' && propName.charAt(1) <= 'Z' ? propName
+                    : StringKit.toUpperCaseFirstOne(propName));
+            try {
+                writeMethod = type.getMethod(setMethodName, prop.getPropertyType());
+            }
+            catch (Exception e) {
+                //不存在set方法
+                return null;
+            }
+        }
+        return writeMethod;
+    }
+    
+    public static String getPackageName(Class<?> clazz) {
+        return StringKit.beforeLast(clazz.getName(), '.');
+    }
+    
+    private static class Foo {
+    }
+    
+    /**
+     * 初始化空的IDataMap
+     * @param cls
+     * @return
+     * @Date        2017年6月11日 下午7:25:37 
+     * @Author      yz.teng
+     */
+    public static IDataMap getIDataMapIns(Class cls) {
+        if (cls == IDataMap.class) {
+            return new DataHashMap();
+        }
+        else {
+            try {
+                return (IDataMap)cls.newInstance();
+            }
+            catch (Exception e) {
+                return null;
+            }
+        }
+    }
+    
+    public static void main(String[] args) {
+        System.out.println(getPackageName(Foo.class));
     }
     
 }

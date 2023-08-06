@@ -1,6 +1,7 @@
 package org.beetl.sql.core.kit;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -165,10 +166,55 @@ public class StringKit {
 	
 	
 	public static void main(String[] args) {
-//		System.out.println(deCodeUnderlined("USER_NAME"));
 		System.out.println(trimAllWhitespace(" fsdfsd sdfds fsd "));
 	}
-	
+
+    /**
+     * 判断一个 Object 是否为空，不包含集合对象的判断
+     *
+     * @param obj need to determine the object
+     * @author larrykoo
+     * @return
+     */
+    public static boolean isNullOrEmpty(Object obj) {
+        if (obj == null) {
+            return true;
+        }
+        if (obj instanceof CharSequence) {
+            return ((CharSequence) obj).length() == 0;
+        }
+        return false;
+    }
+
+    /**
+     * 严格判断一个 Object 是否为空，包括对象为 null，字符串长度为0，集合类，Map 为 empty 的情况
+     *
+     * @param obj
+     * @author larrykoo
+     * @return
+     */
+    public static boolean isNullOrEmptyObject(Object obj) {
+        if (obj == null) {
+            return true;
+        }
+        if (obj instanceof CharSequence) {
+            return ((CharSequence) obj).length() == 0;
+        }
+
+        if (obj instanceof Collection) {
+            return ((Collection) obj).isEmpty();
+        }
+        if (obj instanceof Map) {
+            return ((Map) obj).isEmpty();
+        }
+        if (obj instanceof Object[]) {
+            Object[] object = (Object[]) obj;
+            if (object.length == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
 	
 	public static boolean isEmpty(String str) {
 		return str == null || str.length() == 0;
@@ -179,6 +225,11 @@ public class StringKit {
 	
 	public static String[] split(String str, char separatorChar) {
 		return splitWorker(str, separatorChar, false);
+	}
+
+	public static String beforeLast(String str, char separatorChar) {
+		int pos = str.lastIndexOf((int) separatorChar);
+		return pos == -1 ? "" : str.substring(0, pos);
 	}
 	
 	private static String[] splitWorker(String str, char separatorChar, boolean preserveAllTokens) {

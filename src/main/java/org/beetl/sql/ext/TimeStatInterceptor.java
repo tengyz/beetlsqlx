@@ -3,7 +3,8 @@ package org.beetl.sql.ext;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.beetl.sql.core.Interceptor;
 import org.beetl.sql.core.InterceptorContext;
 import org.beetl.sql.core.engine.SQLParameter;
@@ -13,7 +14,7 @@ import org.beetl.sql.core.engine.SQLParameter;
  *
  */
 public class TimeStatInterceptor implements Interceptor {
-    private static final Logger log = Logger.getLogger(TimeStatInterceptor.class);
+    private static Logger log = LogManager.getLogger(TimeStatInterceptor.class);
     
     List<String> excludes = null;
     
@@ -48,10 +49,11 @@ public class TimeStatInterceptor implements Interceptor {
     }
     
     protected void print(String sqlId, String sql, List<SQLParameter> paras, long time) {
-        System.err.println("sqlId=" + sqlId + " time:" + time);
-        log.info("=====================");
-        log.info(sql);
-        
+        if (log.isDebugEnabled()) {
+            log.debug("sqlId=" + sqlId + " time:" + time);
+            log.debug("=====================");
+            log.debug(sql);
+        }
     }
     
     @Override

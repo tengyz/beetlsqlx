@@ -14,6 +14,7 @@ import org.beetl.sql.core.NameConversion;
 import org.beetl.sql.core.annotatoin.ColumnIgnore;
 import org.beetl.sql.core.annotatoin.InsertIgnore;
 import org.beetl.sql.core.annotatoin.UpdateIgnore;
+import org.beetl.sql.core.annotatoin.Version;
 import org.beetl.sql.core.kit.BeanKit;
 import org.beetl.sql.core.kit.CaseInsensitiveHashMap;
 import org.beetl.sql.core.kit.CaseInsensitiveOrderSet;
@@ -24,7 +25,7 @@ import org.beetl.sql.core.kit.CaseInsensitiveOrderSet;
  *
  */
 public class ClassDesc {
-	Class c ;
+	Class targetClass ;
 	TableDesc  table;
 	NameConversion nc;
 	Set<String> propertys = new CaseInsensitiveOrderSet<String>();
@@ -35,9 +36,11 @@ public class ClassDesc {
 	Map<String,ColumnIgnoreStatus> attrIgnores = new HashMap<String,ColumnIgnoreStatus>();
 	Map<String,Object> idMethods = new CaseInsensitiveHashMap<String,Object>();
 	String ormQuery = null;
+	String versionProperty;
+	String versionCol;
 	
 	public ClassDesc(Class c,TableDesc table,NameConversion nc){
-		this.c = c ;
+		this.targetClass = c ;
 		PropertyDescriptor[] ps;
 		try {
 			ps = BeanKit.propertyDescriptors(c);
@@ -50,7 +53,8 @@ public class ClassDesc {
 		
 		
 		for(PropertyDescriptor p:ps){
-			if(p.getReadMethod()!=null&&p.getWriteMethod()!=null){
+			
+			if(p.getReadMethod()!=null&&BeanKit.getWriteMethod(p, c)!=null){
 				String property = p.getName();
                	String col = nc.getColName(c, property);
                	if(col!=null){
@@ -67,29 +71,35 @@ public class ClassDesc {
 				PropertyDescriptor p = (PropertyDescriptor)tempMap.get(col);
 				propertys.add(p.getName());
 				Method readMethod =  p.getReadMethod();
-				ColumnIgnore sqlIgnore = readMethod.getAnnotation(ColumnIgnore.class);
+				ColumnIgnore sqlIgnore = BeanKit.getAnnoation(c, p.getName(), readMethod, ColumnIgnore.class);
 				if(sqlIgnore!=null){
 					attrIgnores.put(p.getName(), new ColumnIgnoreStatus(sqlIgnore));
 				}else{
 					//2.8.13 后新增
-					InsertIgnore ig = readMethod.getAnnotation(InsertIgnore.class);
-					UpdateIgnore ug = readMethod.getAnnotation(UpdateIgnore.class);
+					InsertIgnore ig = BeanKit.getAnnoation(c, p.getName(), readMethod, InsertIgnore.class);
+					UpdateIgnore ug = BeanKit.getAnnoation(c, p.getName(), readMethod, UpdateIgnore.class);
 					if(ig!=null||ug!=null){
 						attrIgnores.put(p.getName(), new ColumnIgnoreStatus(ig,ug));
 					}
 				}
+				
+				Version version =  BeanKit.getAnnoation(c, p.getName(), readMethod, Version.class);
+				if(version!=null){
+					this.versionProperty = p.getName();
+					this.versionCol = col;
+				}
+				Class retType = readMethod.getReturnType();
+				if( java.util.Date.class.isAssignableFrom(retType)	
+						|| java.util.Calendar.class.isAssignableFrom(retType)){
+					dateTypes.add(p.getName());
+				}
+				
 				if(ids.contains(col)){
 					//保持同一个顺序
 					idProperties.add(p.getName());
 					idCols.add(col);
-					Class retType = readMethod.getReturnType();
 					idMethods.put(p.getName(),readMethod);
-					
-					
-					 if( java.util.Date.class.isAssignableFrom(retType)	
-								|| java.util.Calendar.class.isAssignableFrom(retType)){
-								 dateTypes.add(p.getName());
-							 }
+				
 				}
 				
 			}
@@ -160,6 +170,14 @@ public class ClassDesc {
 		return ignore.updateIgnore;
 	}
 	
+	public String getVersionProperty(){
+		return this.versionProperty;
+	}
+	
+	public String getVersionCol(){
+		return this.versionCol;
+	}
+	
 	static class ColumnIgnoreStatus{
 		public boolean insertIgnore;
 		public boolean updateIgnore;
@@ -173,6 +191,13 @@ public class ClassDesc {
 			updateIgnore = ug!=null;
 		}
 		
+	}
+
+	public Class getTargetClass() {
+		return targetClass;
+	}
+	public void setTargetClass(Class targetClass) {
+		this.targetClass = targetClass;
 	}
 	
 	

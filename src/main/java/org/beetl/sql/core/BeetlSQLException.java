@@ -18,11 +18,8 @@ public class BeetlSQLException extends RuntimeException {
 	public static final int 	SQL_SCRIPT_ERROR  = 6;
 	//期望有id，但未发现有id
 	public static final int 	ID_NOT_FOUND  = 7;
-	
-
 	//SQL 脚本运行出错
 	public static final int 	TABLE_NOT_EXIST  = 8;
-		
 
 	//根据指定类创建实例出错
 	public static final int 	OBJECT_INSTANCE_ERROR  = 9;
@@ -47,9 +44,16 @@ public class BeetlSQLException extends RuntimeException {
 	public static final int 	ID_AUTOGEN_ERROR  = 15;
 	
 	public static final int 	ORM_ERROR  = 16;
+	
 	public static final int 	ORM_LAZY_ERROR  = 17;
 	
-	
+	public static final int 	TEMPLATE_PAGE_PARAS_ERROR  = 18;
+
+	//从对象中获取属性异常
+	public static final int 	GET_OBJECT_PROPERTY_ERROR  = 19;
+
+	//Query工具查询条件错误
+	public static final int 	QUERY_CONDITION_ERROR  = 20;
 		
 	int code ;
 	

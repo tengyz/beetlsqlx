@@ -1,10 +1,37 @@
 package org.beetl.sql.core.mapper.builder;
 
-import org.beetl.sql.core.mapper.*;
-import org.beetl.sql.core.mapper.internal.*;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.beetl.sql.core.mapper.InsertMapperInvoke;
+import org.beetl.sql.core.mapper.MapperInvoke;
+import org.beetl.sql.core.mapper.PageQueryMapperInvoke;
+import org.beetl.sql.core.mapper.SQLReadyExecuteMapperInvoke;
+import org.beetl.sql.core.mapper.SelecSingleMapperInvoke;
+import org.beetl.sql.core.mapper.SelectMapperInvoke;
+import org.beetl.sql.core.mapper.UpdateBatchMapperInvoke;
+import org.beetl.sql.core.mapper.UpdateMapperInvoke;
+import org.beetl.sql.core.mapper.internal.AllAmi;
+import org.beetl.sql.core.mapper.internal.AllCountAmi;
+import org.beetl.sql.core.mapper.internal.DeleteByIdAmi;
+import org.beetl.sql.core.mapper.internal.ExecuteAmi;
+import org.beetl.sql.core.mapper.internal.ExecuteUpdateAmi;
+import org.beetl.sql.core.mapper.internal.GetSQLManagerAmi;
+import org.beetl.sql.core.mapper.internal.InsertAmi;
+import org.beetl.sql.core.mapper.internal.InsertBatchAmi;
+import org.beetl.sql.core.mapper.internal.InsertReturnKeyAmi;
+import org.beetl.sql.core.mapper.internal.InsertTemplateAmi;
+import org.beetl.sql.core.mapper.internal.LockAmi;
+import org.beetl.sql.core.mapper.internal.QueryAmi;
+import org.beetl.sql.core.mapper.internal.SingleAmi;
+import org.beetl.sql.core.mapper.internal.TemplateAmi;
+import org.beetl.sql.core.mapper.internal.TemplateCountAmi;
+import org.beetl.sql.core.mapper.internal.TemplateOneAmi;
+import org.beetl.sql.core.mapper.internal.TemplatePageAmi;
+import org.beetl.sql.core.mapper.internal.UniqueAmi;
+import org.beetl.sql.core.mapper.internal.UpdateByIdAmi;
+import org.beetl.sql.core.mapper.internal.UpdateByIdBatchAmi;
+import org.beetl.sql.core.mapper.internal.UpdateTemplateByIdAmi;
 
 /**
  * <pre>
@@ -18,7 +45,7 @@ import java.util.Map;
  */
 public final class MapperInvokeDataConfig {
     /** 处理用户自定义方法的代理 */
-    static final MapperInvoke[] METHOD_DESC_PROXY_ARRAY;
+    static final Map<Integer, MapperInvoke> METHOD_DESC_PROXY_MAP = new HashMap<Integer, MapperInvoke>();
     /**
      * beetlsql内置映射好的方法, 是提供给: AmiInnerProxyMapperInvoke 对象使用的.
      * 或者提供给其他自定义的BaseMapper使用
@@ -30,14 +57,13 @@ public final class MapperInvokeDataConfig {
 
     static {
         // 处理用户自定义方法的代理, 提供给MethodDesc.type使用的服务.
-        METHOD_DESC_PROXY_ARRAY = new MapperInvoke[7];
-        METHOD_DESC_PROXY_ARRAY[0] = new InsertMapperInvoke();
-        METHOD_DESC_PROXY_ARRAY[1] = new InsertMapperInvoke();
-        METHOD_DESC_PROXY_ARRAY[2] = new SelecSingleMapperInvoke();
-        METHOD_DESC_PROXY_ARRAY[3] = new SelectMapperInvoke();
-        METHOD_DESC_PROXY_ARRAY[4] = new UpdateMapperInvoke();
-        METHOD_DESC_PROXY_ARRAY[5] = new UpdateBatchMapperInvoke();
-        METHOD_DESC_PROXY_ARRAY[6] = new PageQueryMapperInvoke();
+        METHOD_DESC_PROXY_MAP.put(0, new InsertMapperInvoke());
+        METHOD_DESC_PROXY_MAP.put(1, new InsertMapperInvoke());
+        METHOD_DESC_PROXY_MAP.put(2, new SelecSingleMapperInvoke());
+        METHOD_DESC_PROXY_MAP.put(3, new SelectMapperInvoke());
+        METHOD_DESC_PROXY_MAP.put(4, new UpdateMapperInvoke());
+        METHOD_DESC_PROXY_MAP.put(5, new UpdateBatchMapperInvoke());
+        METHOD_DESC_PROXY_MAP.put(6, new PageQueryMapperInvoke());
     }
 
     static {
@@ -49,6 +75,7 @@ public final class MapperInvokeDataConfig {
         INTERNAL_AMI_METHOD.put("deleteById", new DeleteByIdAmi());
         INTERNAL_AMI_METHOD.put("unique", new UniqueAmi());
         INTERNAL_AMI_METHOD.put("single", new SingleAmi());
+        INTERNAL_AMI_METHOD.put("lock", new LockAmi());
         INTERNAL_AMI_METHOD.put("all", new AllAmi());
         INTERNAL_AMI_METHOD.put("allCount", new AllCountAmi());
         INTERNAL_AMI_METHOD.put("template", new TemplateAmi());
@@ -60,12 +87,31 @@ public final class MapperInvokeDataConfig {
         INTERNAL_AMI_METHOD.put("insertBatch", new InsertBatchAmi());
         INTERNAL_AMI_METHOD.put("getSQLManager", new GetSQLManagerAmi());
         INTERNAL_AMI_METHOD.put("insertTemplate", new InsertTemplateAmi());
+        INTERNAL_AMI_METHOD.put("templatePage", new TemplatePageAmi());
+        INTERNAL_AMI_METHOD.put("createQuery", new QueryAmi());
 
+        
         BASE_MAPPER_BUILDER = new MapperConfigBuilder();
+    }
+    //处理 @Sql注解
+    public static MapperInvoke sqlReadyInvoke =  new SQLReadyExecuteMapperInvoke();
+
+    /**
+     * 如果用户要扩展, 推荐methodDescType变量使用1000以后的
+     *
+     * @param methodDescType 类型
+     * @param mapperInvoke   映射类处理.
+     */
+    public static void putMethodDescProxy(int methodDescType, MapperInvoke mapperInvoke) {
+        METHOD_DESC_PROXY_MAP.put(methodDescType, mapperInvoke);
     }
 
     public static MapperInvoke getMethodDescProxy(int methodDescType) {
-        return METHOD_DESC_PROXY_ARRAY[methodDescType];
+        return METHOD_DESC_PROXY_MAP.get(methodDescType);
+    }
+    
+    public static MapperInvoke getSQLReadyProxy(){
+    		return sqlReadyInvoke;
     }
 
 

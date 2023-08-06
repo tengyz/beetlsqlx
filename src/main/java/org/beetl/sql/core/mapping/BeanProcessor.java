@@ -5,6 +5,8 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -28,9 +30,11 @@ import org.beetl.sql.core.engine.SQLParameter;
 import org.beetl.sql.core.kit.BeanKit;
 import org.beetl.sql.core.kit.EnumKit;
 import org.beetl.sql.core.mapping.type.BigDecimalTypeHandler;
+import org.beetl.sql.core.mapping.type.BlobJavaSqlTypeHandler;
 import org.beetl.sql.core.mapping.type.BooleanTypeHandler;
 import org.beetl.sql.core.mapping.type.ByteArrayTypeHandler;
 import org.beetl.sql.core.mapping.type.ByteTypeHandler;
+import org.beetl.sql.core.mapping.type.CLobJavaSqlTypeHandler;
 import org.beetl.sql.core.mapping.type.CharArrayTypeHandler;
 import org.beetl.sql.core.mapping.type.DateTypeHandler;
 import org.beetl.sql.core.mapping.type.DefaultTypeHandler;
@@ -48,7 +52,6 @@ import org.beetl.sql.core.mapping.type.TimestampTypeHandler;
 import org.beetl.sql.core.mapping.type.TypeParameter;
 
 import com.wade.framework.data.IDataMap;
- 
 
 /**
  * ResultSet处理类，负责转换到Bean或者Map
@@ -102,6 +105,10 @@ public class BeanProcessor {
     
     static TimeTypeHandler timeTypeHandler = new TimeTypeHandler();
     
+    static CLobJavaSqlTypeHandler clobTypeHandler = new CLobJavaSqlTypeHandler();
+    
+    static BlobJavaSqlTypeHandler blobTypeHandler = new BlobJavaSqlTypeHandler();
+    
     public BeanProcessor(SQLManager sm) {
         this.nc = sm.getNc();
         this.sm = sm;
@@ -133,6 +140,8 @@ public class BeanProcessor {
         handlers.put(String.class, stringTypeHandler);
         handlers.put(Timestamp.class, timestampTypeHandler);
         handlers.put(Time.class, timeTypeHandler);
+        handlers.put(Clob.class, clobTypeHandler);
+        handlers.put(Blob.class, blobTypeHandler);
         
     }
     
@@ -214,6 +223,10 @@ public class BeanProcessor {
                 columnName = rsmd.getColumnName(i);
             }
             int colType = rsmd.getColumnType(i);
+            if ((dbType == DBStyle.DB_ORACLE || dbType == DBStyle.DB_SQLSERVER) && columnName.equalsIgnoreCase("beetl_rn")) {
+                //sql server 特殊处理，sql'server的翻页使用了额外列作为翻页参数，需要过滤
+                continue;
+            }
             Class classType = JavaType.jdbcJavaTypes.get(colType);
             JavaSqlTypeHandler handler = handlers.get(classType);
             
@@ -224,62 +237,40 @@ public class BeanProcessor {
             tp.setTarget(classType);
             Object value = handler.getValue(tp);
             result.put(this.nc.getPropertyName(c, columnName), value);
+            
         }
         
-        return result;
-    }
-    
-    /**
-     * 将ResultSet转化为IDataMap
-     * @param c
-     * @param rs
-     * @return
-     * @throws SQLException
-     */
-    public IDataMap toIDataMap(String sqlId, Class<?> c, ResultSet rs) throws SQLException {
-        
-        @SuppressWarnings("unchecked")
-        IDataMap result = BeanKit.getIDataMapIns(c);
-        if (c == null) {
-            throw new SQLException("不能映射成Map:" + c);
-        }
-        ResultSetMetaData rsmd = rs.getMetaData();
-        int cols = rsmd.getColumnCount();
-        //      String tableName = nc.getTableName(c);
-        TypeParameter tp = new TypeParameter(sqlId, dbName, null, rs, rsmd, 0);
-        for (int i = 1; i <= cols; i++) {
-            
-            String columnName = rsmd.getColumnLabel(i);
-            if (null == columnName || 0 == columnName.length()) {
-                columnName = rsmd.getColumnName(i);
-            }
-            int colType = rsmd.getColumnType(i);
-            Class classType = JavaType.jdbcJavaTypes.get(colType);
-            JavaSqlTypeHandler handler = handlers.get(classType);
-            
-            if (handler == null) {
-                handler = this.defaultHandler;
-            }
-            tp.setIndex(i);
-            tp.setTarget(classType);
-            Object value = handler.getValue(tp);
-            result.put(columnName.toUpperCase(), value);
-        }
         return result;
     }
     
     public Object toBaseType(String sqlId, Class<?> c, ResultSet rs) throws SQLException {
-        TypeParameter tp = new TypeParameter(sqlId, dbName, c, rs, rs.getMetaData(), 1);
-        int count = tp.getMeta().getColumnCount();
-        if (count != 1) {
+        ResultSetMetaData meta = rs.getMetaData();
+        
+        int count = meta.getColumnCount();
+        int index = 0;
+        if (count == 1) {
+            index = 1;
+            
+        }
+        else if (count == 2 && (dbType == DBStyle.DB_ORACLE || dbType == DBStyle.DB_SQLSERVER)) {
+            //猜测可能有翻页beetl_rn,取出有效列
+            String name1 = meta.getColumnName(1);
+            String name2 = meta.getColumnName(2);
+            index = name2.equalsIgnoreCase("beetl_rn") ? 1 : 2;
+            
+        }
+        
+        if (index == 0) {
             throw new SQLException("Beetlsql查询期望返回一列，返回类型为" + c + " 但返回了" + count + "列，" + sqlId);
         }
-        JavaSqlTypeHandler handler = handlers.get(c);
         
+        TypeParameter tp = new TypeParameter(sqlId, dbName, c, rs, meta, index);
+        JavaSqlTypeHandler handler = handlers.get(c);
         if (handler == null) {
             handler = this.defaultHandler;
         }
         return handler.getValue(tp);
+        
     }
     
     /**
@@ -302,7 +293,7 @@ public class BeanProcessor {
             tp.setIndex(i);
             if (columnToProperty[i] == PROPERTY_NOT_FOUND) {
                 String key = rs.getMetaData().getColumnLabel(i);
-                if (key.equals("beetl_rn")) {
+                if ((dbType == DBStyle.DB_ORACLE || dbType == DBStyle.DB_SQLSERVER) && key.equalsIgnoreCase("beetl_rn")) {
                     //sql server 特殊处理，sql'server的翻页使用了额外列作为翻页参数，需要过滤
                     continue;
                 }
@@ -375,10 +366,9 @@ public class BeanProcessor {
      * @param value
      * @throws SQLException
      */
-    @SuppressWarnings("unchecked")
-    protected void callSetter(Object target, PropertyDescriptor prop, Object value, Class type) throws SQLException {
+    protected void callSetter(Object target, PropertyDescriptor prop, Object value, Class<?> type) throws SQLException {
         
-        Method setter = prop.getWriteMethod();
+        Method setter = BeanKit.getWriteMethod(prop, target.getClass());
         if (setter == null)
             return;
         if (type.isEnum()) {
@@ -417,6 +407,7 @@ public class BeanProcessor {
     protected <T> T newInstance(Class<T> c) throws SQLException {
         
         try {
+            
             return c.newInstance();
             
         }
@@ -488,40 +479,101 @@ public class BeanProcessor {
      * @throws SQLException
      */
     public void setPreparedStatementPara(String sqlId, PreparedStatement ps, List<SQLParameter> objs) throws SQLException {
-        for (int i = 0; i < objs.size(); i++) {
-            SQLParameter para = objs.get(i);
-            Object o = para.value;
-            if (o == null) {
-                ps.setObject(i + 1, o);
-                continue;
-            }
-            Class c = o.getClass();
-            // 兼容性修改：oralce 驱动 不识别util.Date
-            if (dbType == DBStyle.DB_ORACLE || dbType == DBStyle.DB_POSTGRES || dbType == DBStyle.DB_DB2 || dbType == DBStyle.DB_SQLSERVER) {
-                if (c == java.util.Date.class) {
-                    o = new Timestamp(((java.util.Date)o).getTime());
+        int i = 0;
+        SQLParameter para = null;
+        try {
+            for (; i < objs.size(); i++) {
+                para = objs.get(i);
+                Object o = para.value;
+                int jdbcType = para.getJdbcType();
+                if (o == null) {
+                    if (jdbcType != 0) {
+                        ps.setObject(i + 1, o, jdbcType);
+                    }
+                    else {
+                        ps.setObject(i + 1, o);
+                    }
+                    
+                    continue;
                 }
+                Class c = o.getClass();
+                // 兼容性修改：oralce 驱动 不识别util.Date
+                if (dbType == DBStyle.DB_ORACLE || dbType == DBStyle.DB_POSTGRES || dbType == DBStyle.DB_DB2 || dbType == DBStyle.DB_SQLSERVER) {
+                    if (c == java.util.Date.class) {
+                        o = new Timestamp(((java.util.Date)o).getTime());
+                    }
+                }
+                
+                if (Enum.class.isAssignableFrom(c)) {
+                    o = EnumKit.getValueByEnum(o);
+                }
+                
+                //clob or text
+                if (c == char[].class) {
+                    o = new String((char[])o);
+                }
+                
+                if (jdbcType == 0) {
+                    ps.setObject(i + 1, o);
+                }
+                else {
+                    //通常一些特殊的处理
+                    ps.setObject(i + 1, o, jdbcType);
+                }
+                
             }
-            
-            if (Enum.class.isAssignableFrom(c)) {
-                o = EnumKit.getValueByEnum(o);
-            }
-            
-            //clob or text
-            if (c == char[].class) {
-                o = new String((char[])o);
-            }
-            
-            int jdbcType = para.getJdbcType();
-            if (jdbcType == 0) {
-                ps.setObject(i + 1, o);
-            }
-            else {
-                //通常一些特殊的处理
-                throw new UnsupportedOperationException(jdbcType + ",默认处理器并未处理此jdbc类型");
-            }
-            
         }
+        catch (SQLException ex) {
+            throw new SQLException("处理第" + i + "个参数错误:" + ex.getMessage(), ex);
+        }
+        
+    }
+    
+    public JavaSqlTypeHandler getDefaultHandler() {
+        return defaultHandler;
+    }
+    
+    public void setDefaultHandler(JavaSqlTypeHandler defaultHandler) {
+        this.defaultHandler = defaultHandler;
+    }
+    
+    /**
+     * 将ResultSet转化为IDataMap
+     * @param c
+     * @param rs
+     * @return
+     * @throws SQLException
+     */
+    public IDataMap toIDataMap(String sqlId, Class<?> c, ResultSet rs) throws SQLException {
+        
+        @SuppressWarnings("unchecked")
+        IDataMap result = BeanKit.getIDataMapIns(c);
+        if (c == null) {
+            throw new SQLException("不能映射成Map:" + c);
+        }
+        ResultSetMetaData rsmd = rs.getMetaData();
+        int cols = rsmd.getColumnCount();
+        //      String tableName = nc.getTableName(c);
+        TypeParameter tp = new TypeParameter(sqlId, dbName, null, rs, rsmd, 0);
+        for (int i = 1; i <= cols; i++) {
+            
+            String columnName = rsmd.getColumnLabel(i);
+            if (null == columnName || 0 == columnName.length()) {
+                columnName = rsmd.getColumnName(i);
+            }
+            int colType = rsmd.getColumnType(i);
+            Class classType = JavaType.jdbcJavaTypes.get(colType);
+            JavaSqlTypeHandler handler = handlers.get(classType);
+            
+            if (handler == null) {
+                handler = this.defaultHandler;
+            }
+            tp.setIndex(i);
+            tp.setTarget(classType);
+            Object value = handler.getValue(tp);
+            result.put(columnName.toUpperCase(), value);
+        }
+        return result;
     }
     
 }

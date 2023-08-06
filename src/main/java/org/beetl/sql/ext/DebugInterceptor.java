@@ -6,11 +6,14 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.beetl.sql.core.Interceptor;
 import org.beetl.sql.core.InterceptorContext;
+import org.beetl.sql.core.SQLManager;
 import org.beetl.sql.core.engine.SQLParameter;
 import org.beetl.sql.core.kit.EnumKit;
+import org.beetl.sql.core.mapper.MapperJavaProxy;
 
 /**
  * Debug重新美化版本
@@ -19,14 +22,30 @@ import org.beetl.sql.core.kit.EnumKit;
  *
  */
 public class DebugInterceptor implements Interceptor {
-    private static final Logger log = Logger.getLogger(DebugInterceptor.class);
+    private static Logger log = LogManager.getLogger(DebugInterceptor.class);
     
     List<String> includes = null;
+    
+    static String mapperName = MapperJavaProxy.class.getName();
+    
+    static String sqlManager = SQLManager.class.getName();
+    
+    //debug 输入优先输出的类，而不是SQLManager或者是BaseMapper
+    String preferredShowClass;
     
     public DebugInterceptor() {
     }
     
     public DebugInterceptor(List<String> includes) {
+        this.includes = includes;
+    }
+    
+    public DebugInterceptor(String preferredShowClass) {
+        this.preferredShowClass = preferredShowClass;
+    }
+    
+    public DebugInterceptor(List<String> includes, String preferredShowClass) {
+        this.preferredShowClass = preferredShowClass;
         this.includes = includes;
     }
     
@@ -36,76 +55,67 @@ public class DebugInterceptor implements Interceptor {
         if (this.isDebugEanble(sqlId)) {
             ctx.put("debug.time", System.currentTimeMillis());
         }
+        if (this.isSimple(sqlId)) {
+            return;
+        }
         StringBuilder sb = new StringBuilder();
         String lineSeparator = System.getProperty("line.separator", "\n");
-        sb.append("┏━━━━━ Debug [")
-                .append(this.getSqlId(sqlId))
-                .append("] ━━━start")
+        sb.append("\n┏━━━━━ Debug [")
+                .append(this.getSqlId(formatSql(sqlId)))
+                .append("] ━━━")
                 .append(lineSeparator)
-                .append("┣ SQL：\t " + ctx.getSql().replaceAll("--.*", "").replaceAll("\\s+", " "))
-                .append(lineSeparator)
+                .append("┣ SQL：\t " + formatSql(ctx.getSql()) + lineSeparator)
                 .append("┣ 参数：\t " + formatParas(ctx.getParas()))
                 .append(lineSeparator);
         RuntimeException ex = new RuntimeException();
         StackTraceElement[] traces = ex.getStackTrace();
-        boolean found = false;
-        for (int i = 0; i < traces.length; i++) {
-            StackTraceElement tr = traces[i];
-            
-            if (!found && tr.getClassName().indexOf("SQLManager") != -1) {
-                //调用sqlManager的有可能是业务代码，又有可能是mapper类
-                found = true;
-                
-            }
-            else {
-                continue;
-            }
-            
-            int start = this.findLastSQLManager(i, traces);
-            //查找可能的mapper
-            int index = findMapperJavaProxy(start, traces);
-            StackTraceElement bussinessCode = null;
-            if (index == -1) {
-                //业务代码直接调用SQLManager
-                bussinessCode = traces[start];
-            }
-            else {
-                //越过com.sun.proxy.$ProxyXX的调用
-                bussinessCode = traces[index + 2];
-            }
-            String className = bussinessCode.getClassName();
-            String mehodName = bussinessCode.getMethodName();
-            int line = bussinessCode.getLineNumber();
-            sb.append("┣ 位置：\t " + className + "." + mehodName + "(" + bussinessCode.getFileName() + ":" + line + ")" + lineSeparator);
-            break;
-        }
+        int index = lookBusinessCodeInTrace(traces);
+        StackTraceElement bussinessCode = traces[index];
+        String className = bussinessCode.getClassName();
+        String mehodName = bussinessCode.getMethodName();
+        int line = bussinessCode.getLineNumber();
+        sb.append("┣ 位置：\t " + className + "." + mehodName + "(" + bussinessCode.getFileName() + ":" + line + ")" + lineSeparator);
+        
         ctx.put("logs", sb);
     }
     
-    protected int findMapperJavaProxy(int start, StackTraceElement[] traces) {
-        for (int i = start; i < traces.length; i++) {
-            StackTraceElement el = traces[i];
-            if (el.getClassName().equals("org.beetl.sql.core.mapper.MapperJavaProxy")) {
+    protected int lookBusinessCodeInTrace(StackTraceElement[] traces) {
+        
+        String className = getTraceClassName();
+        for (int i = traces.length - 1; i >= 0; i--) {
+            String name = traces[i].getClassName();
+            if (className != null && className.equals(name)) {
                 return i;
+                
+            }
+            else if (name.equals(mapperName)) {
+                //越过2层jdk 代理
+                return i + 2;
+            }
+            else if (name.equals(sqlManager)) {
+                return i + 1;
             }
         }
+        //不可能到这里
+        throw new RuntimeException();
         
-        return -1;
     }
     
-    protected int findLastSQLManager(int start, StackTraceElement[] traces) {
-        for (int i = start; i < traces.length; i++) {
-            StackTraceElement el = traces[i];
-            if (!el.getClassName().equals("org.beetl.sql.core.SQLManager")) {
-                return i;
-            }
-        }
-        //不会执行到这里，因为start就是SQLManager开始的地方
-        return -1;
+    /**
+     * 如果自己封装了beetlsql 有自己的util，并不想打印util类，而是业务类，可以在这里写util类
+     * @return
+     */
+    protected String getTraceClassName() {
+        return preferredShowClass;
     }
     
     @Override
     public void after(InterceptorContext ctx) {
+        String sqlId = ctx.getSqlId();
+        if (this.isSimple(sqlId)) {
+            this.simpleOut(ctx);
+            return;
+        }
         long time = System.currentTimeMillis();
         long start = (Long)ctx.get("debug.time");
         String lineSeparator = System.getProperty("line.separator", "\n");
@@ -135,7 +145,7 @@ public class DebugInterceptor implements Interceptor {
             }
             
         }
-        sb.append("┗━━━━━ Debug [").append(this.getSqlId(ctx.getSqlId())).append("] ━━━end").append(lineSeparator);
+        sb.append("┗━━━━━ Debug [").append(this.getSqlId(formatSql(ctx.getSqlId()))).append("] ━━━").append(lineSeparator);
         println(sb.toString());
         
     }
@@ -183,8 +193,9 @@ public class DebugInterceptor implements Interceptor {
     }
     
     protected void println(String str) {
-        //        System.out.println(str);
-        log.info("\r\n" + str);
+        if (log.isDebugEnabled()) {
+            log.debug(str);
+        }
     }
     
     protected String getSqlId(String sqlId) {
@@ -197,11 +208,41 @@ public class DebugInterceptor implements Interceptor {
     
     @Override
     public void exception(InterceptorContext ctx, Exception ex) {
+        String sqlId = ctx.getSqlId();
+        if (this.isSimple(sqlId)) {
+            this.simpleOutException(ctx, ex);
+            return;
+        }
         String lineSeparator = System.getProperty("line.separator", "\n");
         StringBuilder sb = (StringBuilder)ctx.get("logs");
-        sb.append("┗━━━━━ Debug [ ERROR:").append(ex != null ? ex.getMessage() : "").append("] ━━━end").append(lineSeparator);
+        sb.append("┗━━━━━ Debug [ ERROR:").append(ex != null ? ex.getMessage() : "").append("] ━━━").append(lineSeparator);
         println(sb.toString());
-        
+    }
+    
+    protected String formatSql(String sql) {
+        return sql.replaceAll("--.*", "").replaceAll("\\s+", " ");
+    }
+    
+    protected boolean isSimple(String sqlId) {
+        return false;
+    }
+    
+    protected void simpleOut(InterceptorContext ctx) {
+        String sqlId = ctx.getSqlId();
+        StringBuilder sb = new StringBuilder();
+        sb.append("--BeetlSql:").append(sqlId).append(", paras:").append(formatParas(ctx.getParas()));
+        this.println(sb.toString());
+        return;
+    }
+    
+    protected void simpleOutException(InterceptorContext ctx, Exception ex) {
+        String sqlId = ctx.getSqlId();
+        StringBuilder sb = new StringBuilder();
+        sb.append("--BeetlSql Error:");
+        sb.append(ex != null ? ex.getMessage() : "");
+        sb.append(" 位于 ").append(sqlId).append(", paras:").append(formatParas(ctx.getParas()));
+        this.println(sb.toString());
+        return;
     }
     
 }

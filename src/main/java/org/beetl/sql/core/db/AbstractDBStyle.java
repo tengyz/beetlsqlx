@@ -13,6 +13,7 @@ import org.beetl.core.Configuration;
 import org.beetl.sql.core.BeetlSQLException;
 import org.beetl.sql.core.NameConversion;
 import org.beetl.sql.core.SQLSource;
+import org.beetl.sql.core.SQLTableSource;
 import org.beetl.sql.core.annotatoin.AssignID;
 import org.beetl.sql.core.annotatoin.AutoID;
 import org.beetl.sql.core.annotatoin.DateTemplate;
@@ -20,9 +21,6 @@ import org.beetl.sql.core.annotatoin.SeqID;
 import org.beetl.sql.core.annotatoin.TableTemplate;
 import org.beetl.sql.core.engine.Beetl;
 import org.beetl.sql.core.kit.BeanKit;
-import org.beetl.sql.core.orm.OrmCondition;
-import org.beetl.sql.core.orm.OrmQuery;
-import org.beetl.sql.core.orm.OrmQuery.Type;
 
 /**
  * 按照mysql来的，oralce需要重载insert，page方法
@@ -93,7 +91,16 @@ public abstract class AbstractDBStyle implements DBStyle {
         String tableName = nameConversion.getTableName(cls);
         TableDesc table = this.metadataManager.getTable(tableName);
         String condition = appendIdCondition(cls);
-        return new SQLSource(new StringBuilder("select * from ").append(getTableName(table)).append(condition).toString());
+        return new SQLTableSource(new StringBuilder("select * from ").append(getTableName(table)).append(condition).toString());
+    }
+    
+    @Override
+    public SQLSource genSelectByIdForUpdate(Class<?> cls){
+    		SQLSource source = genSelectById(cls);
+    		String template = source.getTemplate();
+    		template = template+" for update";
+    		source.setTemplate(template);
+    		return source;
     }
 
     @Override
@@ -122,7 +129,7 @@ public abstract class AbstractDBStyle implements DBStyle {
             }
         }
         String sql = new StringBuilder("select * from ").append(getTableName(table)).append(condition).append(appendSql).toString();
-        return new SQLSource(sql);
+        return new SQLTableSource(sql);
     }
 
     @Override
@@ -131,7 +138,7 @@ public abstract class AbstractDBStyle implements DBStyle {
         TableDesc table = this.metadataManager.getTable(tableName);
         String condition = getSelectTemplate(cls);
 
-        return new SQLSource(new StringBuilder("select count(1) from ").append(getTableName(table)).append(condition).toString());
+        return new SQLTableSource(new StringBuilder("select count(1) from ").append(getTableName(table)).append(condition).toString());
 
     }
 
@@ -146,14 +153,13 @@ public abstract class AbstractDBStyle implements DBStyle {
         while (cols.hasNext() && attrs.hasNext()) {
             String col = cols.next();
             String attr = attrs.next();
-            if (classDesc.isDateType(col)) {
-
-                //todo, attr属性并不完全是这么转成getter方法的
-                String getter = "get" + col.substring(0, 1).toUpperCase() + col.substring(1);
+            if (classDesc.isDateType(attr)) {
+            		
                 try {
-                    Method m = cls.getMethod(getter, new Class[]{});
-                    DateTemplate dateTemplate = m.getAnnotation(DateTemplate.class);
-                    if (dateTemplate == null) continue;
+                    DateTemplate dateTemplate = BeanKit.getAnnoation(classDesc.getTargetClass(), attr, DateTemplate.class);
+                    if (dateTemplate == null){
+                    		continue;
+                    }
                     String sql = this.genDateAnnotatonSql(dateTemplate, cls, col);
                     condition = condition + sql;
                     continue;
@@ -178,7 +184,7 @@ public abstract class AbstractDBStyle implements DBStyle {
         TableDesc table = this.metadataManager.getTable(tableName);
         String condition = appendIdCondition(cls);
 
-        return new SQLSource(new StringBuilder("delete from ").append(getTableName(table)).append(condition).toString());
+        return new SQLTableSource(new StringBuilder("delete from ").append(getTableName(table)).append(condition).toString());
     }
 
     @Override
@@ -186,7 +192,7 @@ public abstract class AbstractDBStyle implements DBStyle {
         String tableName = nameConversion.getTableName(cls);
         TableDesc table = this.metadataManager.getTable(tableName);
         tableName = table.getName();
-        return new SQLSource(new StringBuilder("select * from ").append(getTableName(table)).toString());
+        return new SQLTableSource(new StringBuilder("select * from ").append(getTableName(table)).toString());
     }
 
     @Override
@@ -202,6 +208,7 @@ public abstract class AbstractDBStyle implements DBStyle {
         while (cols.hasNext() && properties.hasNext()) {
             String col = cols.next();
             String prop = properties.next();
+            
             if (classDesc.isUpdateIgnore(prop)) {
                 continue;
             }
@@ -209,13 +216,67 @@ public abstract class AbstractDBStyle implements DBStyle {
                 //主键不更新
                 continue;
             }
+            if(col.equals(classDesc.getVersionCol())){
+            		//版本字段
+            		sql.append(this.getKeyWordHandler().getCol(col)).append("=")
+            		.append(this.getKeyWordHandler().getCol(col)).append("+1").append(",");
+            		continue ;
+            }
+           
+
+            sql.append(appendSetColumnAbsolute(cls, table, col, prop));
+        }
+        
+        String condition = appendIdCondition(cls);
+        condition = appendVersion(condition,classDesc);
+        sql = removeComma(sql, condition);
+        return new SQLTableSource(sql.toString());
+    }
+
+    @Override
+    public SQLSource genUpdateAbsolute(Class<?> cls) {
+        String tableName = nameConversion.getTableName(cls);
+        TableDesc table = this.metadataManager.getTable(tableName);
+        ClassDesc classDesc = table.getClassDesc(cls, nameConversion);
+        StringBuilder sql = new StringBuilder("update ").append(getTableName(table)).append(" set ").append(lineSeparator);
+        Iterator<String> cols = classDesc.getInCols().iterator();
+        Iterator<String> properties = classDesc.getAttrs().iterator();
+
+        List<String> idCols = classDesc.getIdCols();
+        while (cols.hasNext() && properties.hasNext()) {
+            String col = cols.next();
+            String prop = properties.next();
+
+            if (classDesc.isUpdateIgnore(prop)) {
+                continue;
+            }
+            if (idCols.contains(col)) {
+                //主键不更新
+                continue;
+            }
+            if(col.equals(classDesc.getVersionCol())){
+                //版本字段
+                sql.append(this.getKeyWordHandler().getCol(col)).append("=")
+                        .append(this.getKeyWordHandler().getCol(col)).append("+1").append(",");
+                continue ;
+            }
 
             sql.append(appendSetColumnAbsolute(cls, table, col, prop));
         }
 
-        String condition = appendIdCondition(cls);
-        sql = removeComma(sql, condition);
-        return new SQLSource(sql.toString());
+        sql = removeComma(sql, "");
+        return new SQLTableSource(sql.toString());
+    }
+
+    private String appendVersion(String condition,ClassDesc desc){
+    		String col = desc.getVersionCol();
+    		if(col==null){
+    			return condition;
+    		}
+    		String property = desc.getVersionProperty();
+    		condition = condition+" and "+this.getKeyWordHandler().getCol(col)+" = "
+                   +HOLDER_START+property+HOLDER_END;
+    		return condition;
     }
 
     @Override
@@ -225,6 +286,7 @@ public abstract class AbstractDBStyle implements DBStyle {
         ClassDesc classDesc = table.getClassDesc(cls, nameConversion);
         StringBuilder sql = new StringBuilder("update ").append(getTableName(table)).append(" set ").append(lineSeparator);
         String condition = appendIdCondition(cls);
+        condition = appendVersion(condition,classDesc);
         Iterator<String> cols = classDesc.getInCols().iterator();
         Iterator<String> properties = classDesc.getAttrs().iterator();
 
@@ -238,6 +300,12 @@ public abstract class AbstractDBStyle implements DBStyle {
             if (idCols.contains(col)) {
                 continue;
             }
+            if(col.equals(classDesc.getVersionCol())){
+	        		//版本字段
+	        		sql.append(this.getKeyWordHandler().getCol(col)).append("=")
+	        		.append(this.getKeyWordHandler().getCol(col)).append("+1").append(",");
+	        		continue;
+            }
             sql.append(appendSetColumn(cls, table, col, prop));
         }
         StringBuilder trimSql = new StringBuilder();
@@ -248,7 +316,7 @@ public abstract class AbstractDBStyle implements DBStyle {
         if (condition == null) {
             throw new BeetlSQLException(BeetlSQLException.ID_EXPECTED_ONE_ERROR, "无法生成sql语句，缺少主键");
         }
-        return new SQLSource(sql.toString());
+        return new SQLTableSource(sql.toString());
 
     }
 
@@ -275,7 +343,7 @@ public abstract class AbstractDBStyle implements DBStyle {
             sql.append(appendSetColumn(cls, table, col, prop));
         }
         sql = removeComma(sql, null);
-        return new SQLSource(sql.toString());
+        return new SQLTableSource(sql.toString());
     }
 
     @Override
@@ -305,7 +373,7 @@ public abstract class AbstractDBStyle implements DBStyle {
         	  	valSql.append("trim({suffixOverrides:','}){").append(this.lineSeparator);
           }
           int idType = DBStyle.ID_ASSIGN;
-          SQLSource source = new SQLSource();
+          SQLTableSource source = new SQLTableSource();
           Iterator<String> cols = classDesc.getInCols().iterator();
           Iterator<String> attrs = classDesc.getAttrs().iterator();
 
@@ -319,13 +387,15 @@ public abstract class AbstractDBStyle implements DBStyle {
 
               if (idCols.size() == 1 && idCols.contains(col)) {
 
-                  idType = this.getIdType((Method) classDesc.getIdMethods().get(attr));
+                  idType = this.getIdType(classDesc.getTargetClass(),attr);
                   if (idType == DBStyle.ID_AUTO) {
                       continue; //忽略这个字段
                   } else if (idType == DBStyle.ID_SEQ) {
 
                       colSql.append(appendInsertColumn(cls, table, col));
-                      SeqID seqId = ((Method) classDesc.getIdMethods().get(attr)).getAnnotation(SeqID.class);
+                      SeqID seqId = BeanKit.getAnnoation(classDesc.getTargetClass(), attr, 
+                    		  (Method)classDesc.getIdMethods().get(attr), SeqID.class);
+                      
                       valSql.append(seqId.name() + ".nextval,");
                       continue;
                   } else if (idType == DBStyle.ID_ASSIGN) {
@@ -338,7 +408,7 @@ public abstract class AbstractDBStyle implements DBStyle {
 					valSql.append(appendInsertTemplateValue(cls, table, attr));
               }else{
 					colSql.append(appendInsertColumn(cls, table, col));
-					valSql.append(appendInsertValue(cls, table, attr));
+					valSql.append(appendInsertValue(cls, table, attr,col));
               }
               
           }
@@ -361,10 +431,9 @@ public abstract class AbstractDBStyle implements DBStyle {
           source.setTableDesc(table);
           if (idType == DBStyle.ID_ASSIGN) {
               Map<String, AssignID> map = new HashMap<String, AssignID>();
-
-
               for (String idAttr : classDesc.getIdAttrs()) {
-                  AssignID assignId = ((Method) classDesc.getIdMethods().get(idAttr)).getAnnotation(AssignID.class);
+                  Method getter = (Method) classDesc.getIdMethods().get(idAttr);
+                  AssignID assignId = BeanKit.getAnnoation(classDesc.getTargetClass(), idAttr, getter,AssignID.class);
                   if (assignId != null && assignId.value().length() != 0) {
 
                       map.put(idAttr, assignId);
@@ -581,7 +650,7 @@ public abstract class AbstractDBStyle implements DBStyle {
      * @param fieldName
      * @return
      */
-    protected String appendInsertValue(Class<?> c, TableDesc table, String fieldName) {
+    protected String appendInsertValue(Class<?> c, TableDesc table, String fieldName,String col) {
     	
         return HOLDER_START + fieldName + HOLDER_END + ",";
 
@@ -699,9 +768,8 @@ public abstract class AbstractDBStyle implements DBStyle {
             comp = new String[]{DateTemplate.LARGE_OPT, DateTemplate.LESS_OPT};
 
         } else {
-            comp = t.accept().split(",");
+            comp =  t.compare().split(",");
         }
-        t.compare().split(",");
 
         String prefix = "";
 
@@ -737,8 +805,8 @@ public abstract class AbstractDBStyle implements DBStyle {
     /* 根据注解来决定主键采用哪种方式生成。在跨数据库应用中，可以为一个id指定多个注解方式，如mysql，postgres 用auto，oracle 用seq
      */
     @Override
-    public int getIdType(Method idMethod) {
-        Annotation[] ans = idMethod.getAnnotations();
+    public int getIdType(Class c,String idProperty) {
+        List<Annotation> ans = BeanKit.getAllAnnoation(c, idProperty);
         int idType = DBStyle.ID_AUTO; //默认是自增长
 
         for (Annotation an : ans) {

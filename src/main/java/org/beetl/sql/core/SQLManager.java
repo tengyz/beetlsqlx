@@ -1,26 +1,30 @@
 package org.beetl.sql.core;
 
-import static org.beetl.sql.core.kit.Constants.DELETE_BY_ID;
-import static org.beetl.sql.core.kit.Constants.INSERT;
-import static org.beetl.sql.core.kit.Constants.INSERT_TEMPLATE;
-import static org.beetl.sql.core.kit.Constants.SELECT_ALL;
-import static org.beetl.sql.core.kit.Constants.SELECT_BY_ID;
-import static org.beetl.sql.core.kit.Constants.SELECT_BY_TEMPLATE;
-import static org.beetl.sql.core.kit.Constants.SELECT_COUNT_BY_TEMPLATE;
-import static org.beetl.sql.core.kit.Constants.UPDATE_ALL;
-import static org.beetl.sql.core.kit.Constants.UPDATE_BY_ID;
-import static org.beetl.sql.core.kit.Constants.UPDATE_TEMPLATE_BY_ID;
-import static org.beetl.sql.core.kit.Constants.classSQL;
+import static org.beetl.sql.core.kit.ConstantEnum.DELETE_BY_ID;
+import static org.beetl.sql.core.kit.ConstantEnum.DELETE_TEMPLATE_BY_ID;
+import static org.beetl.sql.core.kit.ConstantEnum.INSERT;
+import static org.beetl.sql.core.kit.ConstantEnum.INSERT_TEMPLATE;
+import static org.beetl.sql.core.kit.ConstantEnum.LOCK_BY_ID;
+import static org.beetl.sql.core.kit.ConstantEnum.SELECT_ALL;
+import static org.beetl.sql.core.kit.ConstantEnum.SELECT_BY_ID;
+import static org.beetl.sql.core.kit.ConstantEnum.SELECT_BY_TEMPLATE;
+import static org.beetl.sql.core.kit.ConstantEnum.SELECT_COUNT_BY_TEMPLATE;
+import static org.beetl.sql.core.kit.ConstantEnum.UPDATE_ALL;
+import static org.beetl.sql.core.kit.ConstantEnum.UPDATE_BY_ID;
+import static org.beetl.sql.core.kit.ConstantEnum.UPDATE_TEMPLATE_BY_ID;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,7 +33,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.beetl.core.Configuration;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.beetl.sql.core.db.ClassDesc;
 import org.beetl.sql.core.db.DBStyle;
 import org.beetl.sql.core.db.KeyHolder;
@@ -39,22 +44,34 @@ import org.beetl.sql.core.engine.Beetl;
 import org.beetl.sql.core.engine.PageQuery;
 import org.beetl.sql.core.kit.BeanKit;
 import org.beetl.sql.core.kit.CaseInsensitiveOrderSet;
-import org.beetl.sql.core.kit.DataHelper;
+import org.beetl.sql.core.kit.ConstantEnum;
 import org.beetl.sql.core.kit.GenKit;
+import org.beetl.sql.core.kit.PageKit;
 import org.beetl.sql.core.kit.StringKit;
 import org.beetl.sql.core.mapper.DefaultMapperBuilder;
 import org.beetl.sql.core.mapper.MapperBuilder;
 import org.beetl.sql.core.mapper.builder.MapperConfig;
 import org.beetl.sql.core.mapping.BeanProcessor;
+import org.beetl.sql.core.query.Query;
 import org.beetl.sql.ext.SnowflakeIDAutoGen;
 import org.beetl.sql.ext.gen.GenConfig;
 import org.beetl.sql.ext.gen.GenFilter;
+import org.beetl.sql.ext.gen.MDCodeGen;
 import org.beetl.sql.ext.gen.SourceGen;
+import org.beetl.sql.wade.DaoHelper;
+import org.beetl.sql.wade.IStatement;
+import org.beetl.sql.wade.ParameterStatement;
+import org.beetl.sql.wade.SQLParser;
+import org.beetl.sql.wade.SimpleStatement;
+import org.beetl.sql.wade.StdParameterStatement;
+import org.beetl.sql.wade.util.Pagination;
+import org.beetl.sql.wade.util.Parameter;
 
 import com.wade.framework.data.IDataList;
 import com.wade.framework.data.IDataMap;
-
- 
+import com.wade.framework.data.impl.DataArrayList;
+import com.wade.framework.data.impl.DataHashMap;
+import com.wade.framework.data.impl.DatasetResult;
 
 /**
  * Beetsql 操作入口
@@ -62,6 +79,10 @@ import com.wade.framework.data.IDataMap;
  * @author xiandafu
  */
 public class SQLManager {
+    private static Logger log = LogManager.getLogger(SQLManager.class);
+    
+    // 每个sqlManager都有一个标示，可以通过标识来找到对应的sqlManager，用于序列化和反序列化
+    private static Map<String, SQLManager> sqlManagerMap = new HashMap<String, SQLManager>();
     
     Interceptor[] inters = {};
     
@@ -71,10 +92,10 @@ public class SQLManager {
     
     boolean offsetStartZero = false;
     
-    //映射jdbc Result到java对象的工具类，跟sqlId相关
+    // 映射jdbc Result到java对象的工具类，跟sqlId相关
     Map<String, BeanProcessor> processors = new HashMap<String, BeanProcessor>();
     
-    //默认的映射工具类
+    // 默认的映射工具类
     BeanProcessor defaultBeanProcessors = null;
     
     Map<String, IDAutoGen> idAutonGenMap = new HashMap<String, IDAutoGen>();
@@ -83,26 +104,28 @@ public class SQLManager {
     
     private SQLLoader sqlLoader;
     
-    private ConnectionSource ds = null;//数据库连接管理
+    private ConnectionSource ds = null;// 数据库连接管理
     
-    private NameConversion nc = null;//名字转换器
+    private NameConversion nc = null;// 名字转换器
     
     private MetadataManager metaDataManager;
     
-    //数据库默认的shcema，对于单个schema应用，无需指定，但多个shcema，需要指定默认的shcema
+    // 数据库默认的shcema，对于单个schema应用，无需指定，但多个shcema，需要指定默认的shcema
     private String defaultSchema = null;
     
     private MapperConfig mapperConfig = new MapperConfig();
     
+    private String sqlMananagerName = null;
+    
+    private ClassLoader entityLoader = null;
+    
     {
-        //添加一个id简单实现
+        // 添加一个id简单实现
         idAutonGenMap.put("simple", new SnowflakeIDAutoGen());
     }
     
-    // 每个sqlManager都有一个标示，可以通过标识来找到对应的sqlManager，用于序列化和反序列化
-    private static Map<String, SQLManager> sqlManagerMap = new HashMap<String, SQLManager>();
-    
-    private String sqlMananagerName = null;
+    //sqlId 到路径的转化
+    private SQLIdNameConversion idNameConversion = new DefaultSQLIdNameConversion();
     
     /**
      * 创建一个beetlsql需要的sqlmanager
@@ -190,7 +213,7 @@ public class SQLManager {
         
         offsetStartZero = Boolean.parseBoolean(beetl.getPs().getProperty("OFFSET_START_ZERO").trim());
         defaultBeanProcessors = new BeanProcessor(this);
-        //目前假定每个sql都有自己的名字，目前
+        // 目前假定每个sql都有自己的名字，目前
         sqlMananagerName = name;
         this.sqlManagerMap.put(name, this);
     }
@@ -217,6 +240,29 @@ public class SQLManager {
     public static SQLManagerBuilder newBuilder(String driver, String url, String userName, String password) {
         ConnectionSource source = ConnectionSourceHelper.getSimple(driver, url, userName, password);
         return newBuilder(source);
+    }
+    
+    /**
+     * 每个sqlManager都有个名称，如果未指定，默认是dbStyle 返回的名称，即数据库名
+     *
+     * @param name
+     * @return
+     */
+    public static SQLManager getSQLManagerByName(String name) {
+        SQLManager sqlManager = sqlManagerMap.get(name);
+        if (sqlManager == null) {
+            throw new NullPointerException("不能根据" + name + "获得sqlManager");
+        }
+        return sqlManager;
+    }
+    
+    public <T> Query<T> query(Class<T> clazz) {
+        return new Query<T>(this, clazz);
+        
+    }
+    
+    public boolean isOffsetStartZero() {
+        return offsetStartZero;
     }
     
     /**
@@ -304,6 +350,20 @@ public class SQLManager {
      */
     public SQLScript getScript(String id) {
         SQLSource source = sqlLoader.getSQL(id);
+        if (source == null) {
+            String path = this.idNameConversion.getPath(id);
+            SQLLoader sqlLoader = this.getSqlLoader();
+            String envInfo = path + ".md(sql)" + " sqlLoader:" + sqlLoader;
+            if (this.sqlLoader instanceof ClasspathLoader) {
+                if (((ClasspathLoader)sqlLoader).exsitResource(id)) {
+                    envInfo = envInfo + ",文件找到，但没有对应的sqlId";
+                }
+                else {
+                    envInfo = envInfo + ",未找到对应的sql文件";
+                }
+            }
+            throw new BeetlSQLException(BeetlSQLException.CANNOT_GET_SQL, "未能找到" + id + "对应的sql,搜索路径:" + envInfo);
+        }
         SQLScript script = new SQLScript(source, this);
         return script;
     }
@@ -311,19 +371,21 @@ public class SQLManager {
     /**
      * 得到增删改查模板
      *
-     * @param cls
-     * @param tempId，参考 Constants类
-     * @return
+     * @param cls          clz
+     * @param constantEnum ConstantEnum
+     * @return SQLScript
      */
-    public SQLScript getScript(Class<?> cls, int tempId) {
-        String className = cls.getSimpleName().toLowerCase();
-        String id = className + "." + classSQL[tempId];
+    public SQLScript getScript(Class<?> cls, ConstantEnum constantEnum) {
+        //slqId 保持与DefaultSQLIdNameConversion同样命名风格
+        String className = StringKit.toLowerCaseFirstOne(cls.getSimpleName());
+        //        String className = cls.getSimpleName().toLowerCase();
+        String id = className + "." + constantEnum.getClassSQL();
         
-        SQLSource tempSource = this.sqlLoader.getGenSQL(id);
+        SQLSource tempSource = this.sqlLoader.getSQL(id);
         if (tempSource != null) {
             return new SQLScript(tempSource, this);
         }
-        switch (tempId) {
+        switch (constantEnum) {
             case SELECT_BY_ID: {
                 tempSource = this.dbStyle.genSelectById(cls);
                 break;
@@ -367,15 +429,24 @@ public class SQLManager {
                 tempSource = this.dbStyle.genInsertTemplate(cls);
                 break;
             }
+            case DELETE_TEMPLATE_BY_ID:
+                tempSource = this.dbStyle.genDeleteById(cls);
+                break;
+            case LOCK_BY_ID: {
+                tempSource = this.dbStyle.genSelectByIdForUpdate(cls);
+                break;
+            }
             default: {
                 throw new UnsupportedOperationException();
             }
         }
         
         tempSource.setId(id);
-        sqlLoader.addGenSQL(id, tempSource);
+        sqlLoader.addSQL(id, tempSource);
         return new SQLScript(tempSource, this);
     }
+    
+    /* ============ 查询部分 ================== */
     
     /****
      * 获取为分页语句
@@ -386,37 +457,21 @@ public class SQLManager {
     public SQLScript getPageSqlScript(String selectId) {
         String pageId = selectId + "_page";
         if (this.isProductMode()) {
-            //产品模式
-            SQLSource source = sqlLoader.getGenSQL(pageId);
+            // 产品模式
+            SQLSource source = sqlLoader.getSQL(pageId);
             if (source != null) {
                 return new SQLScript(source, this);
             }
         }
         
         SQLSource script = sqlLoader.getSQL(selectId);
-        if (script == null) {
-            script = sqlLoader.getSQL(selectId);
-        }
-        
         String template = script.getTemplate();
         String pageTemplate = dbStyle.getPageSQL(template);
         SQLSource source = new SQLSource(pageId, pageTemplate);
-        sqlLoader.addGenSQL(pageId, source);
+        source.version = script.version;
+        sqlLoader.addSQL(pageId, source);
         return new SQLScript(source, this);
-    }
-    
-    /* ============ 查询部分 ================== */
-    /**
-     * 通过sqlId进行查询,查询结果IDataset集合
-     *
-     * @param sqlId sql标记
-     * @param paras IData参数集合
-     * @return IDataset集合
-     */
-    public IDataList select(String sqlId, IDataMap paras) {
-        Map<String, Object> parasIn = DataHelper.trans2Map(paras);
-        List<Map> queryList = this.select(sqlId, Map.class, parasIn);
-        return DataHelper.trans2IDataset(queryList);
+        
     }
     
     /**
@@ -538,22 +593,6 @@ public class SQLManager {
     }
     
     /**
-     * 翻页查询(返回IDataset)
-     *
-     * @param sqlId sql标记
-     * @param paras IData条件集合
-     * @param start 开始位置
-     * @param size  查询条数
-     * @return IDataset
-     */
-    public IDataList select(String sqlId, IDataMap paras, long start, long size) {
-        SQLScript script = getScript(sqlId);
-        Map<String, Object> parasIn = DataHelper.trans2Map(paras);
-        List<Map> queryList = script.select(parasIn, Map.class, null, start, size);
-        return DataHelper.trans2IDataset(queryList);
-    }
-    
-    /**
      * 翻页查询
      *
      * @param sqlId  sql标记
@@ -569,11 +608,7 @@ public class SQLManager {
         return script.select(paras, clazz, mapper, start, size);
     }
     
-    public <T> void pageQuery(String sqlId, Class<T> clazz, PageQuery query) {
-        pageQuery(sqlId, clazz, query, null);
-    }
-    
-    /**
+    /**    
      * PageQuery分页查询
      * @param sqlId
      * @param query
@@ -586,11 +621,16 @@ public class SQLManager {
         return query;
     }
     
+    public <T> PageQuery<T> pageQuery(String sqlId, Class<T> clazz, PageQuery<T> query) {
+        return pageQuery(sqlId, clazz, query, null);
+    }
+    
     /**
      * 翻页查询，假设有sqlId和sqlId$count 俩个sql存在，beetlsql会通过
      * 这俩个sql来查询总数以及翻页操作，如果没有sqlId$count，则假设sqlId 包含了page函数或者标签 ，如
      * <p>
      * </p>
+     * <p>
      * <p>
      * <pre>
      * queryUser
@@ -598,10 +638,14 @@ public class SQLManager {
      * select #page("a.*,b.name")# from user a left join role b ....
      * </pre>
      *
+     * 
      * @param sqlId
+     * @param clazz
      * @param query
+     * @param mapper
+     * @return
      */
-    public <T> void pageQuery(String sqlId, Class<T> clazz, PageQuery query, RowMapper<T> mapper) {
+    public <T> PageQuery<T> pageQuery(String sqlId, Class<T> clazz, PageQuery query, RowMapper<T> mapper) {
         Object paras = query.getParas();
         Map<String, Object> root = null;
         Long totalRow = query.getTotalRow();
@@ -610,7 +654,8 @@ public class SQLManager {
             root = new HashMap<String, Object>();
         }
         else if (paras instanceof Map) {
-            root = (Map<String, Object>)paras;
+            root = new HashMap<String, Object>((Map<String, Object>)paras);
+            //            root = (Map<String, Object>) paras;
         }
         else {
             root = new HashMap<String, Object>();
@@ -624,13 +669,13 @@ public class SQLManager {
         String sqlCountId = sqlId.concat("$count");
         boolean hasCountSQL = this.sqlLoader.exist(sqlCountId);
         if (query.getTotalRow() == -1) {
-            //需要查询行数
+            // 需要查询行数
             if (hasCountSQL) {
                 totalRow = this.selectSingle(sqlCountId, root, Long.class);
             }
             else {
                 root.put(PageQuery.pageFlag, PageQuery.pageObj);
-                //todo: 如果sql并不包含翻页标签，没有报错，会有隐患
+                // todo: 如果sql并不包含翻页标签，没有报错，会有隐患
                 totalRow = this.selectSingle(sqlId, root, Long.class);
             }
             
@@ -654,6 +699,7 @@ public class SQLManager {
         
         query.setList(list);
         
+        return query;
     }
     
     /**
@@ -681,6 +727,8 @@ public class SQLManager {
         return script.unique(clazz, mapper, pk);
     }
     
+    /* =========模版查询=============== */
+    
     /**
      * @param clazz
      * @param pk
@@ -691,7 +739,17 @@ public class SQLManager {
         return script.single(clazz, null, pk);
     }
     
-    /* =========模版查询=============== */
+    /**
+     * 一个行级锁实现，类似select * from xx where id = ? for update
+     *
+     * @param clazz
+     * @param pk
+     * @return
+     */
+    public <T> T lock(Class<T> clazz, Object pk) {
+        SQLScript script = getScript(clazz, LOCK_BY_ID);
+        return script.single(clazz, null, pk);
+    }
     
     /**
      * btsql自动生成查询语句，查询clazz代表的表的所有数据。
@@ -764,7 +822,7 @@ public class SQLManager {
     public <T> T templateOne(T t) {
         // 改为只查询一条记录
         int start = this.offsetStartZero ? 0 : 1;
-        List<T> list = template(t, start, start + 1);
+        List<T> list = template(t, start, 1);
         if (list.isEmpty()) {
             return null;
         }
@@ -781,18 +839,34 @@ public class SQLManager {
     }
     
     public <T> List<T> template(T t, long start, long size) {
-        return this.template(t, null, start, size);
+        return (List<T>)this.template(t.getClass(), t, null, start, size);
+    }
+    
+    public <T> List<T> template(Class<T> target, Object paras, long start, long size) {
+        return this.template(target, paras, null, start, size);
     }
     
     public <T> List<T> template(T t, RowMapper mapper, long start, long size) {
-        SQLScript script = getScript(t.getClass(), SELECT_BY_TEMPLATE);
-        SQLScript pageScript = this.getPageSqlScript(script.id);
-        Map<String, Object> param = new HashMap<String, Object>();
-        this.dbStyle.initPagePara(param, start, size);
-        param.put("_root", t);
-        
-        return (List<T>)pageScript.select(t.getClass(), param, mapper);
+        return (List<T>)template(t.getClass(), (Object)t, mapper, start, size);
     }
+    
+    public <T> List<T> template(Class<T> target, Object paras, RowMapper mapper, long start, long size) {
+        SQLScript script = getScript(target, SELECT_BY_TEMPLATE);
+        SQLScript pageScript = this.getPageSqlScript(script.id);
+        Map<String, Object> param = null;
+        if (paras instanceof Map) {
+            param = (Map)paras;
+        }
+        else {
+            param = new HashMap<String, Object>();
+            param.put("_root", paras);
+        }
+        this.dbStyle.initPagePara(param, start, size);
+        return (List<T>)pageScript.select(target, param, mapper);
+        
+    }
+    
+    // ========== 取出单个值 ============== //
     
     /**
      * 查询总数
@@ -801,12 +875,21 @@ public class SQLManager {
      * @return
      */
     public <T> long templateCount(T t) {
-        SQLScript script = getScript(t.getClass(), SELECT_COUNT_BY_TEMPLATE);
-        Long l = script.singleSelect(t, Long.class);
-        return l;
+        return templateCount(t.getClass(), t);
     }
     
-    //========== 取出单个值  ============== //
+    public <T> long templateCount(Class<T> target, Object paras) {
+        SQLScript script = getScript(target, SELECT_COUNT_BY_TEMPLATE);
+        if (paras instanceof Map) {
+            Map<String, Object> map = (Map<String, Object>)paras;
+            Long l = script.selectSingle(map, Long.class);
+            return l;
+        }
+        else {
+            Long l = script.singleSelect(paras, Long.class);
+            return l;
+        }
+    }
     
     /**
      * 将查询结果返回成Long类型
@@ -943,7 +1026,19 @@ public class SQLManager {
         return script.deleteById(clazz, pkValue);
     }
     
-    //============= 插入 ===================  //
+    /**
+     * 删除对象, 通过对象的主键
+     *
+     * @param obj 对象,必须包含了主键，实际上根据主键来删除
+     * @return
+     */
+    public int deleteObject(Object obj) {
+        
+        SQLScript script = getScript(obj.getClass(), DELETE_TEMPLATE_BY_ID);
+        return script.update(obj);
+    }
+    
+    // ============= 插入 =================== //
     
     /**
      * 通用插入操作
@@ -1045,8 +1140,11 @@ public class SQLManager {
                 try {
                     Method setterMethod = target.getMethod(setterName, new Class[] {getterMethod.getReturnType()});
                     Object value = holder.getKey();
-                    value = BeanKit.convertValueToRequiredType(value, getterMethod.getReturnType());
-                    setterMethod.invoke(paras, new Object[] {value});
+                    if (value != null) {
+                        //KeyHolder有值才设置
+                        value = BeanKit.convertValueToRequiredType(value, getterMethod.getReturnType());
+                        setterMethod.invoke(paras, new Object[] {value});
+                    }
                     return result;
                 }
                 catch (Exception ex) {
@@ -1213,10 +1311,22 @@ public class SQLManager {
         return script.update(paras);
     }
     
+    /**
+     * 按照模板更新
+     * @param c
+     * @param obj
+     * @return
+     */
+    public int updateTemplateById(Class c, Object obj) {
+        SQLScript script = getScript(c, UPDATE_TEMPLATE_BY_ID);
+        return script.update(obj);
+    }
+    
     /****
      * 批量更新
      *
-     * @param list ,包含pojo（不支持map）
+     * @param list
+     *            ,包含pojo（不支持map）
      * @return
      */
     public int[] updateByIdBatch(List<?> list) {
@@ -1314,6 +1424,7 @@ public class SQLManager {
     /**
      * 只使用master执行:
      * <p>
+     * <p>
      * <pre>
      *    sqlManager.useMaster(new DBRunner(){
      *    		public void run(SQLManager sqlManager){
@@ -1330,6 +1441,7 @@ public class SQLManager {
     
     /**
      * 只使用Slave执行:
+     * <p>
      * <p>
      * <pre>
      *    sqlManager.useSlave(new DBRunner(){
@@ -1370,10 +1482,10 @@ public class SQLManager {
      */
     public <T> List<T> execute(String sqlTemplate, Class<T> clazz, Map paras) {
         String key = "auto._gen_" + sqlTemplate;
-        SQLSource source = sqlLoader.getGenSQL(key);
+        SQLSource source = sqlLoader.getSQL(key);
         if (source == null) {
             source = new SQLSource(key, sqlTemplate);
-            this.sqlLoader.addGenSQL(key, source);
+            this.sqlLoader.addSQL(key, source);
         }
         
         SQLScript script = new SQLScript(source, this);
@@ -1391,12 +1503,15 @@ public class SQLManager {
      * @return
      */
     public <T> List<T> execute(String sqlTemplate, Class<T> clazz, Map paras, long start, long size) {
-        String key = "auto._gen_" + sqlTemplate;
-        SQLSource source = sqlLoader.getGenSQL(key);
+        String key = "auto._gen_page_" + sqlTemplate;
+        SQLSource source = sqlLoader.getSQL(key);
         if (source == null) {
             String pageSql = this.dbStyle.getPageSQL(sqlTemplate);
             source = new SQLSource(key, pageSql);
-            this.sqlLoader.addGenSQL(key, source);
+            this.sqlLoader.addSQL(key, source);
+        }
+        if (paras == null) {
+            paras = new HashMap();
         }
         
         this.dbStyle.initPagePara(paras, start, size);
@@ -1415,7 +1530,6 @@ public class SQLManager {
      * @return
      */
     public <T> List<T> execute(String sqlTemplate, Class<T> clazz, Object paras, long start, long size) {
-        
         Map map = new HashMap();
         map.put("_root", paras);
         return this.execute(sqlTemplate, clazz, map, start, size);
@@ -1430,10 +1544,10 @@ public class SQLManager {
      */
     public int executeUpdate(String sqlTemplate, Object paras) {
         String key = "auto._gen_" + sqlTemplate;
-        SQLSource source = sqlLoader.getGenSQL(key);
+        SQLSource source = sqlLoader.getSQL(key);
         if (source == null) {
             source = new SQLSource(key, sqlTemplate);
-            this.sqlLoader.addGenSQL(key, source);
+            this.sqlLoader.addSQL(key, source);
         }
         
         SQLScript script = new SQLScript(source, this);
@@ -1451,10 +1565,10 @@ public class SQLManager {
      */
     public int executeUpdate(String sqlTemplate, Map paras) {
         String key = "auto._gen_" + sqlTemplate;
-        SQLSource source = sqlLoader.getGenSQL(key);
+        SQLSource source = sqlLoader.getSQL(key);
         if (source == null) {
             source = new SQLSource(key, sqlTemplate);
-            this.sqlLoader.addGenSQL(key, source);
+            this.sqlLoader.addSQL(key, source);
         }
         SQLScript script = new SQLScript(source, this);
         return script.update(paras);
@@ -1473,6 +1587,31 @@ public class SQLManager {
         return script.sqlReadySelect(clazz, p);
     }
     
+    public <T> PageQuery<T> execute(SQLReady p, Class<T> clazz, PageQuery<T> pageQuery) {
+        if (pageQuery.getParas() != null) {
+            throw new RuntimeException("参数需要通过SQLReady传递");
+        }
+        String sql = p.getSql();
+        String countSql = PageKit.getCountSql(sql);
+        List<Long> countList = execute(new SQLReady(countSql, p.getArgs()), Long.class);
+        Long count = countList.get(0);
+        List<T> list = null;
+        if (count == 0) {
+            list = Collections.emptyList();
+        }
+        else {
+            long pageNumber = pageQuery.getPageNumber();
+            long pageSize = pageQuery.getPageSize();
+            long offset = (pageNumber - 1) * pageSize + (offsetStartZero ? 0 : 1);
+            String pageSql = this.dbStyle.getPageSQLStatement(sql, offset, pageSize);
+            list = execute(new SQLReady(pageSql, p.getArgs()), clazz);
+        }
+        pageQuery.setTotalRow(count);
+        pageQuery.setList(list);
+        return pageQuery;
+        
+    }
+    
     /**
      * 直接执行sql语句，用于删除或者更新，sql语句已经是准备好的，采用preparedstatment执行
      *
@@ -1484,6 +1623,8 @@ public class SQLManager {
         SQLScript script = new SQLScript(source, this);
         return script.sqlReadyExecuteUpdate(p);
     }
+    
+    // ========= 代码生成 ================================================================//
     
     /**
      * 自己用Connection执行jdbc，通常用于存储过程调用，或者需要自己完全控制的jdbc
@@ -1502,7 +1643,7 @@ public class SQLManager {
             throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
         }
         finally {
-            //非事务环境提交
+            // 非事务环境提交
             if (!getDs().isTransaction()) {
                 try {
                     if (!conn.getAutoCommit()) {
@@ -1518,161 +1659,6 @@ public class SQLManager {
             }
         }
     }
-    
-    //========= 调用存储过程 =====start========//
-    /**
-     * 调用存储过程
-     * @param name 存储过程名称
-     * @param paramNames 存储过程入参和出参
-     * @param params     入参对应的参数值key是入参名称，value为值，params又为返回结果集合
-     * @Date        2017年7月28日 下午12:52:33 
-     * @Author      yz.teng
-     */
-    public void callProc(String name, String[] paramNames, IDataMap params) {
-        Connection conn = null;
-        ConnectionSource getsource = null;
-        try {
-            getsource = getDs();
-            conn = getsource.getMaster();
-            callProc(conn, name, paramNames, params);
-        }
-        catch (SQLException e) {
-            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
-        }
-        finally {
-            //非事务环境提交
-            if (!getDs().isTransaction()) {
-                try {
-                    if (!conn.getAutoCommit()) {
-                        conn.commit();
-                    }
-                    conn.close();
-                }
-                catch (SQLException e) {
-                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
-                }
-            }
-        }
-    }
-    
-    private static void callProc(Connection conn, String name, String[] paramNames, IDataMap params) throws SQLException {
-        int[] paramKinds = new int[paramNames.length];
-        int[] paramTypes = new int[paramNames.length];
-        decodeParamInfo(paramNames, paramKinds, paramTypes);
-        callProc(conn, name, paramNames, params, paramKinds, paramTypes);
-    }
-    
-    private static void decodeParamInfo(String[] paramNames, int[] paramKinds, int[] paramTypes) {
-        for (int i = 0; i < paramNames.length; i++) {
-            paramKinds[i] = decodeParamKind(paramNames[i]);
-            paramTypes[i] = decodeParamType(paramNames[i]);
-        }
-    }
-    
-    private static int decodeParamKind(String paramName) {
-        int v;
-        char c = paramName.charAt(0);
-        switch (c) {
-            case 'i':
-                v = 0;
-                break;
-            case 'o':
-                v = 1;
-                break;
-            default:
-                v = 2;
-        }
-        return v;
-    }
-    
-    private static int decodeParamType(String paramName) {
-        int v;
-        char c = paramName.charAt(1);
-        switch (c) {
-            case 'n':
-                v = java.sql.Types.NUMERIC;
-                break;
-            case 'd':
-                v = java.sql.Types.TIMESTAMP;
-                break;
-            case 'v':
-            default:
-                v = java.sql.Types.VARCHAR;
-        }
-        return v;
-    }
-    
-    /**
-     * 调用存储过程
-     * 
-     * @param conn -
-     *            JDBC连接
-     * @param name -
-     *            存储过程名字
-     * @param paramNames -
-     *            参数名字数组，必须与存储过程声明的参数顺序一致，名字不一定要与过程参数名一样
-     * @param params -
-     *            存放每个参数对应的输入值，调用完成后保存对应参数的输出值，名字必须与paramNames中声明的一样
-     * @param paramKinds -
-     *            参数输入输出类型数组，依次声明每个参数的输入输出类型，0:IN 1:OUT 2:IN OUT
-     * @param paramTypes -
-     *            参数数据类型数组，一次声明每个参数的数据类型，参考java.sql.Types中的常量
-     * @throws SQLException
-     */
-    private static void callProc(Connection conn, String name, String[] paramNames, IDataMap params, int[] paramKinds, int[] paramTypes)
-            throws SQLException {
-        StringBuffer sb = new StringBuffer();
-        sb.append("{call ");
-        sb.append(name);
-        sb.append("(");
-        int i;
-        for (i = 0; i < paramNames.length; i++) {
-            sb.append("?");
-            if (i < paramNames.length - 1) {
-                sb.append(",");
-            }
-        }
-        sb.append(")}");
-        CallableStatement stmt = conn.prepareCall(sb.toString());
-        for (i = 0; i < paramNames.length; i++) {
-            String paramName = paramNames[i];
-            int paramKind = paramKinds[i];
-            int paramIdx = i + 1;
-            if ((paramKind == 0) || (paramKind == 2)) {
-                stmt.setObject(paramIdx, params.get(paramName), paramTypes[i]);
-            }
-            if ((paramKind == 1) || (paramKind == 2)) {
-                stmt.registerOutParameter(paramIdx, paramTypes[i]);
-            }
-        }
-        stmt.execute();
-        for (i = 0; i < paramNames.length; i++) {
-            String paramName = paramNames[i];
-            int paramKind = paramKinds[i];
-            int paramIdx = i + 1;
-            if ((paramKind == 1) || (paramKind == 2)) {
-                params.put(paramName, stmt.getObject(paramIdx));
-            }
-        }
-        stmt.close();
-    }
-    
-    //========= 调用存储过程 =====end========//
-    
-    /**
-     * 直接执行jdbc的sql语句查询，sql语句已经是准备好的，采用preparedstatment执行
-     *
-     * @param SQLReady
-     * @return IDataList返回查询结果 返回的字段都是大写的表字段
-     */
-    public IDataList queryList(SQLReady p) {
-        SQLSource source = new SQLSource("native." + p.getSql(), p.getSql());
-        SQLScript script = new SQLScript(source, this);
-        IDataList queryList = script.queryList(p);
-        return queryList;
-    }
-    
-    //========= 代码生成 =============//
     
     /**
      * 根据表名生成对应的pojo类
@@ -1743,11 +1729,16 @@ public class SQLManager {
     }
     
     /**
-     * 将sql模板文件输出到src下，如果采用的是ClasspathLoader，则使用ClasspathLoader的配置，否则，生成到src的sql代码里
+     * 将sql模板文件输出到src下，如果采用的是ClasspathLoader，则使用ClasspathLoader的配置，否则，
+     * 生成到src的sql代码里
      *
      * @param table
      */
     public void genSQLFile(String table) throws Exception {
+        genSQLFile(table, null);
+    }
+    
+    public void genSQLFile(String table, String alias) throws Exception {
         String path = "/sql";
         if (this.sqlLoader instanceof ClasspathLoader) {
             path = ((ClasspathLoader)sqlLoader).sqlRoot;
@@ -1755,7 +1746,7 @@ public class SQLManager {
         String fileName = StringKit.toLowerCaseFirstOne(this.nc.getClassName(table));
         String target = GenKit.getJavaResourcePath() + "/" + path + "/" + fileName + ".md";
         FileWriter writer = new FileWriter(new File(target));
-        genSQLTemplate(table, writer);
+        genSQLTemplate(table, writer, alias);
         writer.close();
         System.out.println("gen \"" + table + "\" success at " + target);
     }
@@ -1767,32 +1758,29 @@ public class SQLManager {
      */
     public void genSQLTemplateToConsole(String table) throws Exception {
         
-        genSQLTemplate(table, new OutputStreamWriter(System.out));
+        genSQLTemplate(table, new OutputStreamWriter(System.out), null);
         
     }
     
-    private void genSQLTemplate(String table, Writer w) throws IOException {
-        String template = null;
-        Configuration cf = beetl.getGroupTemplate().getConf();
+    /**
+     * 生成md到控制台，使用别名
+     *
+     * @param table
+     * @param alias
+     * @throws Exception
+     */
+    public void genSQLTemplateToConsole(String table, String alias) throws Exception {
         
-        String hs = cf.getPlaceholderStart();
-        String he = cf.getPlaceholderEnd();
-        StringBuilder cols = new StringBuilder();
-        String sql = "select " + hs + "use(\"cols\")" + he + " from " + table + " where " + hs + "use(\"condition\")" + he;
-        cols.append("sample").append("\n===\n").append("* 注释").append("\n\n\t").append(sql);
-        cols.append("\n");
+        genSQLTemplate(table, new OutputStreamWriter(System.out), alias);
         
-        cols.append("\ncols").append("\n===\n").append("").append("\n\t").append(this.dbStyle.genColumnList(table));
-        cols.append("\n");
+    }
+    
+    private void genSQLTemplate(String table, Writer w, String alias) throws IOException {
         
-        cols.append("\nupdateSample").append("\n===\n").append("").append("\n\t").append(this.dbStyle.genColAssignPropertyAbsolute(table));
-        cols.append("\n");
-        String condition = this.dbStyle.genCondition(table);
-        condition = condition.replaceAll("\\n", "\n\t");
-        cols.append("\ncondition").append("\n===\n").append("").append("\n\t").append(condition);
-        cols.append("\n");
-        w.write(cols.toString());
-        w.flush();
+        MDCodeGen mdCodeGen = new MDCodeGen();
+        TableDesc desc = this.metaDataManager.getTable(table);
+        mdCodeGen.genCode(beetl, desc, this.nc, alias, w);
+        
     }
     
     /**
@@ -1809,9 +1797,9 @@ public class SQLManager {
             table = metaDataManager.getTable(table).getName();
             if (filter == null || filter.accept(table)) {
                 try {
-                    //生成代码
+                    // 生成代码
                     this.genPojoCode(table, pkg, config);
-                    //生成模板文件
+                    // 生成模板文件
                     this.genSQLFile(table);
                 }
                 catch (Exception e) {
@@ -1848,6 +1836,8 @@ public class SQLManager {
         
     }
     
+    // ===============get/set===============
+    
     /**
      * 通过mapper接口生成dao代理
      *
@@ -1857,8 +1847,6 @@ public class SQLManager {
     public <T> T getMapper(Class<T> mapperInterface) {
         return this.mapperBuilder.getMapper(mapperInterface);
     }
-    
-    //===============get/set===============
     
     public SQLLoader getSqlLoader() {
         return sqlLoader;
@@ -2013,8 +2001,8 @@ public class SQLManager {
     }
     
     /**
-     * 为指定的sqlId提供一个处理类，可以既可以是一个sqlId，也可以是namespace部分，所有属于namesapce的都会被此BeanProcessor
-     * 处理
+     * 为指定的sqlId提供一个处理类，可以既可以是一个sqlId，也可以是namespace部分，
+     * 所有属于namesapce的都会被此BeanProcessor 处理
      *
      * @param processors
      */
@@ -2046,7 +2034,13 @@ public class SQLManager {
      * @param sqlIdNc
      */
     public void setSQLIdNameConversion(SQLIdNameConversion sqlIdNc) {
+        this.idNameConversion = sqlIdNc;
         this.sqlLoader.setSQLIdNameConversion(sqlIdNc);
+        
+    }
+    
+    public SQLIdNameConversion getSQLIdNameConversion() {
+        return idNameConversion;
     }
     
     public MapperConfig getMapperConfig() {
@@ -2061,21 +2055,1552 @@ public class SQLManager {
         return this.mapperConfig;
     }
     
-    /**
-     * 每个sqlManager都有个名称，如果未指定，默认是dbStyle 返回的名称，即数据库名
-     * @param name
-     * @return
-     */
-    public static SQLManager getSQLManagerByName(String name) {
-        SQLManager sqlManager = sqlManagerMap.get(name);
-        if (sqlManager == null) {
-            throw new NullPointerException("不能根据" + name + "获得sqlManager");
-        }
-        return sqlManager;
-    }
-    
     public String getSQLManagerName() {
         return this.sqlMananagerName;
+    }
+    
+    /**
+     * 清空缓存，用于动态增加修改表情况下可以
+     */
+    public void refresh() {
+        this.metaDataManager.refresh();
+        this.sqlLoader.refresh();
+    }
+    
+    public ClassLoader getEntityLoader() {
+        return entityLoader;
+    }
+    
+    /**
+     * 设置classloder，如果没有，pojo的初始化使用ContextClassLoader或者加载Beetlsql的classLoader
+     * @param entityLoader
+     */
+    public void setEntityLoader(ClassLoader entityLoader) {
+        this.entityLoader = entityLoader;
+        if (this.sqlLoader instanceof ClasspathLoader) {
+            ((ClasspathLoader)sqlLoader).setClassLoader(entityLoader);
+        }
+    }
+    
+    /////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////wade查询方法//////////////////////////////////////////////////////
+    /** 
+     * query list(参数为new对象方式)
+     * @param sql
+     * @param param
+     * @return IDataList
+     * @throws Exception
+     * 例子：
+     *  StringBuffer sql = new StringBuffer();
+     *   sql.append(" select a.product_state from ucr_cen.td_b_product a where a.product_id = ? and a.province_code = ?");
+     *   return queryList(sql.toString(), new Object[]{product_id,provinceCode});
+     */
+    public IDataList queryList(String sql, Object[] param) throws Exception {
+        return queryList(sql, param, null);
+    }
+    
+    /** 
+     * query list
+     * @param sql
+     * @param param
+     * @param pagination
+     * @return IDataList
+     * @throws Exception
+     */
+    public IDataList queryList(String sql, Object[] param, Pagination pagination) throws Exception {
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getSlave();//查询走从库
+            return queryList(conn, sql, new Parameter(param), pagination);
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //非事务环境提交
+            if (!getDs().isTransaction()) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+                }
+            }
+        }
+        
+    }
+    
+    /** 
+     * query list（SQLParser 对象查询）
+     * @param parser
+     * @return IDataset
+     * @throws Exception
+     * 例子：
+     * IData inParam = new DataMap();
+     * inParam.put("PRODUCT_ID", PRODUCT_ID);
+     * SQLParser parser = new SQLParser(inParam);
+     *   parser.addSQL(" SELECT A.PRODUCT_ID, A.PRODUCT_NAME,A.START_DATE,A.END_DATE FROM TD_B_PRODUCT A WHERE 1=1 ");
+     *   parser.addSQL(" AND A.PRODUCT_ID = :PRODUCT_ID");
+     *   return queryList(parser, pagination);
+     */
+    public IDataList queryList(SQLParser parser) throws Exception {
+        return queryList(parser, null);
+    }
+    
+    /** 
+     * query list
+     * @param parser
+     * @param 
+     * @return IDataset
+     * @throws Exception
+     */
+    public IDataList queryList(SQLParser parser, Pagination pagination) throws Exception {
+        return queryList(parser.getSQL(), parser.getParam(), pagination);
+    }
+    
+    /** 
+     * query list
+     * @param sql
+     * @param param
+     * @param pagination
+     * @return IDataset
+     * @throws Exception
+     */
+    public IDataList queryList(String sql, IDataMap param, Pagination pagination) throws Exception {
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getSlave();//查询走从库
+            return queryList(conn, sql, param, pagination);
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //非事务环境提交
+            if (!getDs().isTransaction()) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+                }
+            }
+        }
+        
+    }
+    
+    /** 
+     * query list（IDataMap 对象查询方式）
+     * @param sql
+     * @param param
+     * @return IDataset
+     * @throws Exception
+     * 例子：
+     * IData params = new DataMap();
+     * params.put("ACCT_ID", acct_id);
+     * String sql = "SELECT * FROM TF_B_NBR_EXCHANGE A WHERE A.ACCT_ID=:ACCT_ID ";
+     *   return this.queryList(sql,data);
+     */
+    public IDataList queryList(String sql, IDataMap param) throws Exception {
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getSlave();//查询走从库
+            return queryList(conn, sql, param);
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //非事务环境提交
+            if (!getDs().isTransaction()) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+                }
+            }
+        }
+        
+    }
+    
+    /** 
+     * query list（new对象方式查询）
+     * @param conn
+     * @param sql
+     * @param param
+     * @param pagination
+     * @return IDataList
+     * @throws Exception
+     */
+    private IDataList queryList(Connection conn, String sql, Parameter param, Pagination pagination) throws Exception {
+        if (pagination != null && pagination.isOnlyCount()) {
+            DataArrayList list = new DataArrayList();
+            IDataMap tmp = new DataHashMap();
+            tmp.put("X_SELCOUNT", String.valueOf(getCount(conn, sql, param)));
+            list.add(tmp);
+            return list;
+        }
+        
+        boolean isrange = pagination != null && pagination.isRange();
+        int count = isrange ? (pagination.isNeedCount() ? getCount(conn, sql, param) : pagination.getCount()) : 0;
+        boolean isbatch = pagination != null && pagination.isBatch();
+        
+        if (isbatch) {
+            return getTotalDataset(conn, sql, param, count, pagination.getSize());
+        }
+        else {
+            if (isrange) {
+                if (param == null)
+                    param = new Parameter();
+                sql = DaoHelper.getPagingSql(sql, param, pagination.getStart(), pagination.getStart() + pagination.getSize());
+            }
+            
+            DatasetResult dataset = (DatasetResult)queryList(conn, sql, param);
+            dataset.setCount(count);
+            return dataset;
+        }
+        
+    }
+    
+    /** 
+     * query list（SQLParser 方式查询）
+     * @param conn
+     * @param sql
+     * @param param
+     * @param pagination
+     * @return IDataset
+     * @throws Exception
+     */
+    private IDataList queryList(Connection conn, String sql, IDataMap param, Pagination pagination) throws Exception {
+        if (pagination != null && pagination.isOnlyCount()) {
+            DataArrayList list = new DataArrayList();
+            IDataMap tmp = new DataHashMap();
+            tmp.put("X_SELCOUNT", String.valueOf(getCount(conn, sql, param)));
+            list.add(tmp);
+            return list;
+        }
+        
+        boolean isrange = pagination != null && pagination.isRange();
+        int count = isrange ? (pagination.isNeedCount() ? getCount(conn, sql, param) : pagination.getCount()) : 0;
+        boolean isbatch = pagination != null && pagination.isBatch();
+        
+        if (isbatch) {
+            return getTotalDataset(conn, sql, param, count, pagination.getSize());
+        }
+        else {
+            if (isrange) {
+                if (param == null)
+                    param = new DataHashMap();
+                sql = DaoHelper.getPagingSql(sql, param, pagination.getStart(), pagination.getStart() + pagination.getSize());
+            }
+            
+            DatasetResult dataset = (DatasetResult)queryList(conn, sql, param);
+            dataset.setCount(count);
+            return dataset;
+        }
+    }
+    
+    /** 
+     * get total dataset
+     * @param conn
+     * @param sql
+     * @param param
+     * @param rowCount
+     * @param maxPageSize
+     * @return IDataList
+     * @throws Exception
+     */
+    private IDataList getTotalDataset(Connection conn, String sql, Parameter param, int rowCount, int maxPageSize) throws Exception {
+        IDataList dataset = new DataArrayList();
+        
+        int pageCount = (int)Math.ceil((double)rowCount / (double)maxPageSize);
+        
+        if (pageCount > 1) {
+            setDatasetSerializable(dataset, pageCount, maxPageSize);
+        }
+        
+        for (int i = 0; i < pageCount; i++) {
+            Parameter subparam = new Parameter();
+            subparam.addAll(param);
+            String subsql = DaoHelper.getPagingSql(sql, subparam, i * maxPageSize, i * maxPageSize + maxPageSize);
+            IDataList subset = queryList(conn, subsql, subparam);
+            dataset.addAll(queryList(conn, subsql, subparam));
+        }
+        
+        return dataset;
+    }
+    
+    /** 
+     * get total dataset
+     * @param conn
+     * @param sql
+     * @param param
+     * @param rowCount
+     * @param maxPageSize
+     * @return IDataList
+     * @throws Exception
+     */
+    private IDataList getTotalDataset(Connection conn, String sql, IDataMap param, int rowCount, int maxPageSize) throws Exception {
+        IDataList dataset = new DataArrayList();
+        
+        int pageCount = (int)Math.ceil((double)rowCount / (double)maxPageSize);
+        
+        if (pageCount > 1) {
+            setDatasetSerializable(dataset, pageCount, maxPageSize);
+        }
+        
+        for (int i = 0; i < pageCount; i++) {
+            IDataMap subparam = new DataHashMap();
+            subparam.putAll(param);
+            String subsql = DaoHelper.getPagingSql(sql, subparam, i * maxPageSize, i * maxPageSize + maxPageSize);
+            
+            IDataList subset = queryList(conn, subsql, subparam);
+            if (false) {
+                //writeObject(dataset.getSerializablePath() + "/" + dataset.getSerializableId() + "/" + i, subset);
+            }
+            else {
+                dataset.addAll(queryList(conn, subsql, subparam));
+            }
+        }
+        
+        return dataset;
+    }
+    
+    /** 
+     * write object
+     * @param file_name
+     * @param obj
+     * @throws Exception
+     */
+    public static void writeObject(String file_name, Object obj) throws Exception {
+        writeObject(new File(file_name), obj);
+    }
+    
+    /** 
+     * write object
+     * @param file
+     * @param obj
+     * @throws Exception
+     */
+    public static void writeObject(File file, Object obj) throws Exception {
+        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file));
+        out.writeObject(obj);
+        out.close();
+    }
+    
+    /** 
+     * set dataset serializable
+     * @param dataset
+     * @throws Exception
+     */
+    private void setDatasetSerializable(IDataList dataset, int pageCount, int pageSize) throws Exception {
+        
+    }
+    
+    /**
+     * get count
+     * @param conn
+     * @param sql
+     * @param param
+     * @return int
+     * @throws Exception
+     */
+    private int getCount(Connection conn, String sql, Parameter param) throws Exception {
+        if (param == null || param.size() == 0)
+            return getCount(conn, sql);
+        ResultSet rs = executeQuery(conn, DaoHelper.getCountSql(sql), param);
+        int value = rs.next() ? rs.getInt(1) : 0;
+        rs.getStatement().close();
+        return value;
+    }
+    
+    /**
+     * get count
+     * @param conn
+     * @param sql
+     * @return int
+     * @throws Exception
+     */
+    private int getCount(Connection conn, String sql) throws Exception {
+        ResultSet rs = executeQuery(conn, DaoHelper.getCountSql(sql));
+        int value = rs.next() ? rs.getInt(1) : 0;
+        rs.getStatement().close();
+        return value;
+    }
+    
+    /**
+     * get count
+     * @param conn
+     * @param sql
+     * @param param
+     * @return int
+     * @throws Exception
+     */
+    private int getCount(Connection conn, String sql, IDataMap param) throws Exception {
+        if (param == null)
+            return getCount(conn, sql);
+        ResultSet rs = executeQuery(conn, DaoHelper.getCountSql(sql), param);
+        int value = rs.next() ? rs.getInt(1) : 0;
+        rs.getStatement().close();
+        return value;
+    }
+    
+    /**
+     * execute query
+     * @param conn
+     * @param sql
+     * @param param
+     * @return ResultSet
+     * @throws Exception
+     */
+    private ResultSet executeQuery(Connection conn, String sql, IDataMap param) throws Exception {
+        IStatement statement = new StdParameterStatement(conn, sql, param);
+        return statement.executeQuery();
+    }
+    
+    /**
+     * execute query
+     * @param conn
+     * @param sql
+     * @return ResultSet
+     * @throws Exception
+     */
+    private ResultSet executeQuery(Connection conn, String sql) throws Exception {
+        IStatement statement = new SimpleStatement(conn, sql);
+        return statement.executeQuery();
+    }
+    
+    /**
+     * execute query
+     * @param conn
+     * @param sql
+     * @param param
+     * @return ResultSet
+     * @throws Exception
+     */
+    private ResultSet executeQuery(Connection conn, String sql, Parameter param) throws Exception {
+        IStatement statement = new ParameterStatement(conn, sql, param);
+        return statement.executeQuery();
+    }
+    
+    /** 
+     * query list
+     * @param conn
+     * @param sql
+     * @param param
+     * @return IDataset
+     * @throws Exception
+     */
+    private IDataList queryList(Connection conn, String sql, Parameter param) throws Exception {
+        if (param == null || param.size() == 0)
+            return queryList(conn, sql);
+        ResultSet rs = executeQuery(conn, sql, param);
+        IDataList dataset = new DatasetResult(rs);
+        rs.getStatement().close();
+        return dataset;
+    }
+    
+    /** 
+     * query list
+     * @param conn
+     * @param sql
+     * @return IDataset
+     * @throws Exception
+     */
+    private IDataList queryList(Connection conn, String sql) throws Exception {
+        ResultSet rs = executeQuery(conn, sql);
+        IDataList dataset = new DatasetResult(rs);
+        rs.getStatement().close();
+        return dataset;
+    }
+    
+    /** 
+     * query list
+     * @param conn
+     * @param sql
+     * @param param
+     * @return IDataset
+     * @throws Exception
+     */
+    private IDataList queryList(Connection conn, String sql, IDataMap param) throws Exception {
+        if (param == null)
+            return queryList(conn, sql);
+        ResultSet rs = executeQuery(conn, sql, param);
+        IDataList dataset = new DatasetResult(rs);
+        rs.getStatement().close();
+        return dataset;
+    }
+    
+    public IDataList queryList(String sql) throws Exception {
+        ResultSet rs = executeQuery(sql);
+        IDataList dataset = new DatasetResult(rs);
+        rs.getStatement().close();
+        return dataset;
+    }
+    
+    /**
+     * 查询，直接执行sql，无参数
+     * @param sql
+     * @return
+     * @throws Exception
+     * @Date        2018年3月9日 上午1:42:50 
+     * @Author      yz.teng
+     */
+    public ResultSet executeQuery(String sql) throws Exception {
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getSlave();//查询走从库
+            IStatement statement = new SimpleStatement(conn, sql);
+            return statement.executeQuery();
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //            //非事务环境提交
+            //            if (!getDs().isTransaction()) {
+            //                System.out.println("非事务环境提交");
+            //                try {
+            //                    if (!conn.getAutoCommit()) {
+            //                        conn.commit();
+            //                    }
+            //                    conn.close();
+            //                }
+            //                catch (SQLException e) {
+            //                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+            //                }
+            //            }
+        }
+    }
+    
+    /** 
+     * query by pk
+     * @param table_name
+     * @param data
+     * @param keys
+     * @return IData
+     * @throws Exception
+     * 例子：
+     * IData condition = new DataMap();
+     * condition.put("RECV_BANK_CODE", data.get("RECV_BANK_CODE"));
+     * condition.put("SUPER_BANK_CODE", data.get("SUPER_BANK_CODE"));
+     *  queryByPK("TD_B_BANKTORECVBANK", condition, new String[] {"RECV_BANK_CODE", "SUPER_BANK_CODE" })
+     */
+    public IDataMap queryByPK(String table_name, IDataMap data, String[] keys) throws Exception {
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getSlave();//查询走从库
+            return queryByPK(conn, table_name, data, keys);
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //非事务环境提交
+            if (!getDs().isTransaction()) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+                }
+            }
+        }
+    }
+    
+    ////////////////////////wade 新增 修改//////////////////////////////////
+    
+    /** 
+     * execute update
+     * @param parser
+     * @param int
+     * @throws Exception
+     * 例子：
+     * IData reqData = new DataMap();
+     * reqData.put("OUTER_TRADE_ID", outerTradeId);
+     * SQLParser parser = new SQLParser(data);
+     *   parser.addSQL("insert into tf_b_reqxml(OUTER_TRADE_ID)values(:OUTER_TRADE_ID)");
+     *   return this.executeUpdate(parser);
+     */
+    public int executeUpdate(SQLParser parser) throws Exception {
+        return executeUpdate(parser.getSQL(), parser.getParam());
+    }
+    
+    /**
+     * execute update
+     * @param sql
+     * @param param
+     * @return int
+     * @throws Exception
+     * 例子：
+     * IData param
+     * String sql = "DELETE FROM TF_R_RES_NEW a WHERE a.BATCH_ID = :LOG_ID";
+     *   executeUpdate(sql, param);
+     */
+    public int executeUpdate(String sql, IDataMap param) throws Exception {
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getSlave();//查询走从库
+            return executeUpdate(conn, sql, param);
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //非事务环境提交
+            if (!getDs().isTransaction()) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+                }
+            }
+        }
+        
+    }
+    
+    /**
+     * execute update
+     * @param conn
+     * @param sql
+     * @param param
+     * @return int
+     * @throws Exception
+     */
+    private int executeUpdate(Connection conn, String sql, IDataMap param) throws Exception {
+        IStatement statement = new StdParameterStatement(conn, sql, param);
+        int result = statement.executeUpdate();
+        statement.close();
+        return result;
+    }
+    
+    /**
+     * execute update
+     * @param sql
+     * @param param
+     * @return int
+     * @throws Exception
+     * 例子：
+     * executeUpdate("DELETE FROM TF_B_RES_BATCH_TMP WHERE LOG_ID = ? ", new Object[]{logId});
+     */
+    public int executeUpdate(String sql, Object[] param) throws Exception {
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getMaster();
+            return executeUpdate(conn, sql, param);
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //非事务环境提交
+            if (!getDs().isTransaction()) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+                }
+            }
+        }
+        
+    }
+    
+    /**
+     * execute update
+     * @parma conn
+     * @param sql
+     * @param param
+     * @return int
+     * @throws Exception
+     */
+    private int executeUpdate(Connection conn, String sql, Object[] param) throws Exception {
+        return executeUpdate(conn, sql, new Parameter(param));
+    }
+    
+    /**
+     * execute update
+     * @param conn
+     * @param sql
+     * @param param
+     * @return int
+     * @throws Exception
+     */
+    private int executeUpdate(Connection conn, String sql, Parameter param) throws Exception {
+        IStatement statement = new ParameterStatement(conn, sql, param);
+        int result = statement.executeUpdate();
+        statement.close();
+        return result;
+    }
+    
+    /**
+     * update data
+     * @param table_name
+     * @param data
+     * @return boolean
+     * @throws Exception
+     * 例子：
+     * IDataMap critexec
+     * critexec.put("COMP_TIME", common.getSysTime());
+     *   update("TF_F_QRY_CRITERIA_EXEC", critexec);
+     */
+    public boolean update(String table_name, IDataMap data) throws Exception {
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getMaster();
+            return update(conn, table_name, data);
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //非事务环境提交
+            if (!getDs().isTransaction()) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+                }
+            }
+        }
+    }
+    
+    /**
+     * update data
+     * @param conn
+     * @param table_name
+     * @param data
+     * @return boolean
+     * @throws Exception
+     */
+    private boolean update(Connection conn, String table_name, IDataMap data) throws Exception {
+        return update(conn, table_name, data, null);
+    }
+    
+    /**
+     * update data
+     * @param conn
+     * @param table_name
+     * @param data
+     * @param keys
+     * @return boolean
+     * @throws Exception
+     */
+    private boolean update(Connection conn, String table_name, IDataMap data, String[] keys) throws Exception {
+        return update(conn, table_name, data, keys, null);
+    }
+    
+    /**
+     * update data
+     * @param conn
+     * @param table_name
+     * @param data
+     * @param keys
+     * @param values
+     * @return boolean
+     * @throws Exception
+     */
+    private boolean update(Connection conn, String table_name, IDataMap data, String[] keys, String[] values) throws Exception {
+        Object[] updobjs = DaoHelper.getObjectsByUpdate(conn, table_name, data, keys, values);
+        int result = executeUpdate(conn, (String)updobjs[0], (Parameter)updobjs[1]);
+        return result == 0 ? false : true;
+    }
+    
+    /** 
+     * save data（保存）
+     * @param table_name
+     * @param data
+     * @return boolean
+     * @throws Exception
+     * 例子：
+     * IData param2 = new DataMap();
+     *   param2.put("TYPE_ID",param.get("TYPE_ID"));
+     *   dao.delete("TD_S_STATIC_TYPE", param2);
+     *   dao.save("TD_S_STATIC_TYPE", param);
+     */
+    public boolean save(String table_name, IDataMap data) throws Exception {
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getMaster();
+            return save(conn, table_name, data);
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //非事务环境提交
+            if (!getDs().isTransaction()) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+                }
+            }
+        }
+    }
+    
+    /** 
+     * save data
+     * @param conn
+     * @param table_name
+     * @param data
+     * @return boolean
+     * @throws Exception
+     */
+    private boolean save(Connection conn, String table_name, IDataMap data) throws Exception {
+        return save(conn, table_name, data, null);
+    }
+    
+    /** 
+     * save data
+     * @param conn
+     * @param table_name
+     * @param data
+     * @param keys
+     * @return boolean
+     * @throws Exception
+     */
+    private boolean save(Connection conn, String table_name, IDataMap data, String[] keys) throws Exception {
+        return save(conn, table_name, data, keys, null);
+    }
+    
+    /** 
+     * save data
+     * @param conn
+     * @param table_name
+     * @param data
+     * @param keys
+     * @param values
+     * @return boolean
+     * @throws Exception
+     */
+    private boolean save(Connection conn, String table_name, IDataMap data, String[] keys, String[] values) throws Exception {
+        IDataMap alldata = values == null ? queryByPK(conn, table_name, data, keys) : queryByPK(conn, table_name, keys, values);
+        if (alldata == null)
+            return false;
+        alldata.putAll(data);
+        
+        return update(conn, table_name, alldata, keys, values);
+    }
+    
+    /** 
+     * query by pk
+     * @param conn
+     * @param table_name
+     * @param data
+     * @param keys
+     * @return IData
+     * @throws Exception
+     */
+    private IDataMap queryByPK(Connection conn, String table_name, IDataMap data, String[] keys) throws Exception {
+        Object[] qryobjs = DaoHelper.getObjectsByQuery(conn, table_name, data, keys);
+        IDataList dataset = queryList(conn, (String)qryobjs[0], (Parameter)qryobjs[1]);
+        return dataset.size() == 0 ? null : (IDataMap)dataset.get(0);
+    }
+    
+    /** 
+     * query by pk
+     * @param conn
+     * @param table_name
+     * @param keys
+     * @param values
+     * @return IData
+     * @throws Exception
+     */
+    private IDataMap queryByPK(Connection conn, String table_name, String[] keys, String[] values) throws Exception {
+        return queryByPK(conn, table_name, DaoHelper.getDataByKeys(keys, values), keys);
+    }
+    
+    /** 
+     * save data
+     * @param table_name
+     * @param data
+     * @parma keys
+     * @return boolean
+     * @throws Exception
+     * 例子：
+     * IData data = new DataMap();
+     *   data.put("LOG_ID", log_id);
+     *   data.put("SUBSYS_CODE", pd.getContext().getSubSysCode());
+     *   data.put("OUT_TIME", dao.getSysTime());
+     *   data.put("REMARK", remark);
+     *   
+     *   return dao.save("TL_M_STAFFLOG", data, new String[] {"LOG_ID"});
+     */
+    public boolean save(String table_name, IDataMap data, String[] keys) throws Exception {
+        
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getMaster();
+            return save(conn, table_name, data, keys);
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //非事务环境提交
+            if (!getDs().isTransaction()) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+                }
+            }
+        }
+    }
+    
+    ////////////////////////wade 删除///////////////////////////////////////////////
+    
+    /**
+     * execute batch
+     * @param sql
+     * @param params
+     * @return int[]
+     * @throws Exception
+     */
+    public int[] executeBatch(String sql, IDataList params) throws Exception {
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getMaster();
+            return executeBatch(conn, sql, params);
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //非事务环境提交
+            if (!getDs().isTransaction()) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+                }
+            }
+        }
+        
+    }
+    
+    /**
+     * execute batch（批量删除）
+     * @param conn
+     * @param sqls
+     * @param params
+     * @return int[]
+     * @throws Exception
+     * 例子：
+     * IDataset operInfos = new DatasetList();
+     *   for (int i=0;i<dataset.count();i++) 
+     *   {
+     *       IData temp = (IData) dataset.get(i);
+     *       temp.put("LOG_ID", logId);
+     *       temp.put("OBJECT_ID",temp.get("DATA_CODE"));
+     *       temp.put("RSRV_STR1",temp.get("RIGHT_MODE"));
+     *       operInfos.add(temp);
+     *   }
+     * this.executeBatch("insert into TF_B_SYS_BATCH_TMP (OBJECT_ID, LOG_ID,RSRV_STR1) SELECT :OBJECT_ID,:LOG_ID,:RSRV_STR1 FROM dual WHERE not exists(SELECT 1 FROM TF_B_SYS_BATCH_TMP WHERE LOG_ID=:LOG_ID AND OBJECT_ID=:OBJECT_ID AND RSRV_STR1=:RSRV_STR1)", operInfos);
+     */
+    private int[] executeBatch(Connection conn, String sql, IDataList params) throws Exception {
+        IStatement statement = new StdParameterStatement(conn, sql, params);
+        int[] result = statement.executeBatch();
+        statement.close();
+        return result;
+    }
+    
+    /**
+     * execute batch
+     * @param sql
+     * @param params
+     * @return int[]
+     * @throws Exception
+     * 例子：
+     * Parameter[] params = new Parameter[items.size()];
+     *   for (int i=0; i<params.length; i++) {
+     *       String item_id = (String) ((IData) items.get(i)).get("ITEM_ID");
+     *       String item_result = common.getStrByArray(pd.getParameters(item_id));
+     *       
+     *       params[i] = new Parameter();
+     *       params[i].add(doc_id);
+     *       params[i].add(item_id);
+     *       params[i].add("".equals(item_result) ? null : item_result);
+     *   }
+     *   executeBatch(sql, params);
+     */
+    public int[] executeBatch(String sql, Parameter[] params) throws Exception {
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getMaster();
+            return executeBatch(conn, sql, params);
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //非事务环境提交
+            if (!getDs().isTransaction()) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+                }
+            }
+        }
+        
+    }
+    
+    /**
+     * execute batch
+     * @param conn
+     * @param sqls
+     * @param params
+     * @return int[]
+     * @throws Exception
+     */
+    private int[] executeBatch(Connection conn, String sql, Parameter[] params) throws Exception {
+        IStatement statement = new ParameterStatement(conn, sql, params);
+        int[] result = statement.executeBatch();
+        statement.close();
+        return result;
+    }
+    
+    /** 
+     * delete data
+     * @param table_name
+     * @param data
+     * @return boolean
+     * @throws Exception
+     * 例子：
+     * IData param = new DataMap();
+     *   param.put("ACCT_ID", acctId);
+     *   param.put("USER_ID", userId);
+     *   param.put("TEMPLET_TYPE", type);
+     *   param.put("TEMPLET_CODE", code);
+     *   dao.delete("TF_B_NOTE_TEMPLET", param);
+     */
+    public boolean delete(String table_name, IDataMap data) throws Exception {
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getMaster();
+            return delete(conn, table_name, data);
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //非事务环境提交
+            if (!getDs().isTransaction()) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+                }
+            }
+        }
+    }
+    
+    /** 
+     * delete data
+     * @param conn
+     * @param table_name
+     * @param data
+     * @return boolean
+     * @throws Exception
+     */
+    private boolean delete(Connection conn, String table_name, IDataMap data) throws Exception {
+        return delete(conn, table_name, data, null);
+    }
+    
+    /** 
+     * delete data
+     * @param conn
+     * @param table_name
+     * @param data
+     * @param keys
+     * @return boolean
+     * @throws Exception
+     */
+    private boolean delete(Connection conn, String table_name, IDataMap data, String[] keys) throws Exception {
+        Object[] delobjs = DaoHelper.getObjectsByDelete(conn, table_name, data, keys);
+        int result = executeUpdate(conn, (String)delobjs[0], (Parameter)delobjs[1]);
+        return result == 0 ? false : true;
+    }
+    
+    /**
+     * delete data
+     * @param table_name
+     * @param dataset
+     * @return int[]
+     * @throws Exception
+     * 例子：
+     * IDataset dataset = new DatasetList();
+     *   for (int i=0; i<favos.length; i++) {
+     *       IData data = new DataMap();
+     *       data.put("FAVO_ID", favos[i]);
+     *       dataset.add(data);
+     *   }
+     *   
+     *   dao.delete("TF_F_FAVORITE", dataset);
+     */
+    public int[] delete(String table_name, IDataList dataset) throws Exception {
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getMaster();
+            return delete(conn, table_name, dataset);
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //非事务环境提交
+            if (!getDs().isTransaction()) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+                }
+            }
+        }
+    }
+    
+    /** 
+     * delete data
+     * @param conn
+     * @param table_name
+     * @param dataset
+     * @return int[]
+     * @throws Exception
+     */
+    private int[] delete(Connection conn, String table_name, IDataList dataset) throws Exception {
+        return delete(conn, table_name, dataset, null);
+    }
+    
+    /** 
+     * delete data
+     * @param conn
+     * @param table_name
+     * @param dataset
+     * @param keys
+     * @return int[]
+     * @throws Exception
+     */
+    private int[] delete(Connection conn, String table_name, IDataList dataset, String[] keys) throws Exception {
+        if (dataset.size() == 0)
+            return null;
+        Object[] delobjs = DaoHelper.getObjectsByDelete(conn, table_name, dataset, keys);
+        return executeBatch(conn, (String)delobjs[0], (Parameter[])delobjs[1]);
+    }
+    
+    /** 
+     * delete data（指定字段删除）
+     * @param table_name
+     * @param data
+     * @param keys
+     * @return boolean
+     * @throws Exception
+     * 例子：
+     * IData data = new DataMap();
+     *   data.put("GROUP_ID", group_id);
+     *   dao.delete("TF_F_ADDRESS", data, new String[] { "GROUP_ID" });
+     */
+    public boolean delete(String table_name, IDataMap data, String[] keys) throws Exception {
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getMaster();
+            return delete(conn, table_name, data, keys);
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //非事务环境提交
+            if (!getDs().isTransaction()) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+                }
+            }
+        }
+    }
+    
+    ///////////////////////////////wade新增///////////////////////////////////////////////
+    /** 
+     * insert data（单个）
+     * @param table_name
+     * @param data
+     * @return boolean
+     * @throws Exception
+     * 例子：
+     * 
+     * public void insertLeaveRealFeeQryWork(IData param)throws Exception{
+     *   String trade_id = this.getSequence(param.getString("EPARCHY_CODE"),"SEQ_TRADE_ID");
+     *   param.put("WORK_ID", trade_id);
+     *   this.insert("TF_B_ASYN_WORK", param);
+     * }
+     */
+    public boolean insert(String table_name, IDataMap data) throws Exception {
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getMaster();
+            return insert(conn, table_name, data);
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //非事务环境提交
+            if (!getDs().isTransaction()) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+                }
+            }
+        }
+    }
+    
+    /** 
+     * insert data
+     * @param conn
+     * @param table_name
+     * @param data
+     * @return boolean
+     * @throws Exception
+     */
+    private boolean insert(Connection conn, String table_name, IDataMap data) throws Exception {
+        Object[] insobjs = DaoHelper.getObjectsByInsert(conn, table_name, data);
+        int result = executeUpdate(conn, (String)insobjs[0], (Parameter)insobjs[1]);
+        return result == 0 ? false : true;
+    }
+    
+    /** 
+     * insert data（批量）
+     * @param table_name
+     * @param dataset
+     * @return int[]
+     * @throws Exception
+     */
+    public int[] insert(String table_name, IDataList dataset) throws Exception {
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getMaster();
+            return insert(conn, table_name, dataset);
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //非事务环境提交
+            if (!getDs().isTransaction()) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+                }
+            }
+        }
+    }
+    
+    /** 
+     * insert data
+     * @param conn
+     * @param table_name
+     * @param dataset
+     * @return int[]
+     * @throws Exception
+     */
+    private int[] insert(Connection conn, String table_name, IDataList dataset) throws Exception {
+        if (dataset.size() == 0)
+            return null;
+        Object[] insobjs = DaoHelper.getObjectsByInsert(conn, table_name, dataset);
+        return executeBatch(conn, (String)insobjs[0], (Parameter[])insobjs[1]);
+    }
+    
+    //////////////////////////////////////////end////////////////////////////////////////////////////
+    
+    //========= 调用存储过程 =====start========//
+    /**
+     * 调用存储过程
+     * @param name 存储过程名称
+     * @param paramNames 存储过程入参和出参
+     * @param params     入参对应的参数值key是入参名称，value为值，params又为返回结果集合
+     * @Date        2017年7月28日 下午12:52:33 
+     * @Author      yz.teng
+     * 调用示例：
+     *  IDataMap paramData3 = new DataHashMap();
+     *       paramData3.put("IV_SERVERNAME", getData3.getString("servername"));
+     *       paramData3.put("IV_ANALYSIS_TYPE", "NORMAL");//上传时写死 NORMAL ，解析类型（正常NORMAL\稽核CHECK）
+     *       paramData3.put("IV_JT_FLAG", getData3.getString("jtFlag"));
+     *       paramData3.put("IV_PERIOD_NAME", periodId);
+     *       paramData3.put("IV_REPORT_TYPE", getData3.getString("reportType"));
+     *       sql.callProc(getData3.getString("procedureProgram"), new String[] {"IV_SERVERNAME", "IV_ANALYSIS_TYPE", "IV_JT_FLAG", "IV_PERIOD_NAME",
+     *               "IV_REPORT_TYPE", "V_RETCODE", "V_RETINFO"}, paramData3);
+     */
+    public void callProc(String name, String[] paramNames, IDataMap params) {
+        Connection conn = null;
+        ConnectionSource getsource = null;
+        try {
+            getsource = getDs();
+            conn = getsource.getMaster();
+            callProc(conn, name, paramNames, params);
+        }
+        catch (SQLException e) {
+            throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+        }
+        finally {
+            //非事务环境提交
+            if (!getDs().isTransaction()) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    throw new BeetlSQLException(BeetlSQLException.SQL_EXCEPTION, e);
+                }
+            }
+        }
+    }
+    
+    private static void callProc(Connection conn, String name, String[] paramNames, IDataMap params) throws SQLException {
+        int[] paramKinds = new int[paramNames.length];
+        int[] paramTypes = new int[paramNames.length];
+        decodeParamInfo(paramNames, paramKinds, paramTypes);
+        callProc(conn, name, paramNames, params, paramKinds, paramTypes);
+    }
+    
+    private static void decodeParamInfo(String[] paramNames, int[] paramKinds, int[] paramTypes) {
+        for (int i = 0; i < paramNames.length; i++) {
+            paramKinds[i] = decodeParamKind(paramNames[i]);
+            paramTypes[i] = decodeParamType(paramNames[i]);
+        }
+    }
+    
+    private static int decodeParamKind(String paramName) {
+        int v;
+        char c = paramName.charAt(0);
+        switch (c) {
+            case 'i':
+                v = 0;
+                break;
+            case 'o':
+                v = 1;
+                break;
+            default:
+                v = 2;
+        }
+        return v;
+    }
+    
+    private static int decodeParamType(String paramName) {
+        int v;
+        char c = paramName.charAt(1);
+        switch (c) {
+            case 'n':
+                v = java.sql.Types.NUMERIC;
+                break;
+            case 'd':
+                v = java.sql.Types.TIMESTAMP;
+                break;
+            case 'v':
+            default:
+                v = java.sql.Types.VARCHAR;
+        }
+        return v;
+    }
+    
+    /**
+     * 调用存储过程
+     * 
+     * @param conn -
+     *            JDBC连接
+     * @param name -
+     *            存储过程名字
+     * @param paramNames -
+     *            参数名字数组，必须与存储过程声明的参数顺序一致，名字不一定要与过程参数名一样
+     * @param params -
+     *            存放每个参数对应的输入值，调用完成后保存对应参数的输出值，名字必须与paramNames中声明的一样
+     * @param paramKinds -
+     *            参数输入输出类型数组，依次声明每个参数的输入输出类型，0:IN 1:OUT 2:IN OUT
+     * @param paramTypes -
+     *            参数数据类型数组，一次声明每个参数的数据类型，参考java.sql.Types中的常量
+     * @throws SQLException
+     */
+    private static void callProc(Connection conn, String name, String[] paramNames, IDataMap params, int[] paramKinds, int[] paramTypes)
+            throws SQLException {
+        StringBuffer sb = new StringBuffer();
+        sb.append("{call ");
+        sb.append(name);
+        sb.append("(");
+        int i;
+        for (i = 0; i < paramNames.length; i++) {
+            sb.append("?");
+            if (i < paramNames.length - 1) {
+                sb.append(",");
+            }
+        }
+        sb.append(")}");
+        CallableStatement stmt = conn.prepareCall(sb.toString());
+        for (i = 0; i < paramNames.length; i++) {
+            String paramName = paramNames[i];
+            int paramKind = paramKinds[i];
+            int paramIdx = i + 1;
+            if ((paramKind == 0) || (paramKind == 2)) {
+                stmt.setObject(paramIdx, params.get(paramName), paramTypes[i]);
+            }
+            if ((paramKind == 1) || (paramKind == 2)) {
+                stmt.registerOutParameter(paramIdx, paramTypes[i]);
+            }
+        }
+        stmt.execute();
+        for (i = 0; i < paramNames.length; i++) {
+            String paramName = paramNames[i];
+            int paramKind = paramKinds[i];
+            int paramIdx = i + 1;
+            if ((paramKind == 1) || (paramKind == 2)) {
+                params.put(paramName, stmt.getObject(paramIdx));
+            }
+        }
+        stmt.close();
+    }
+    
+    //========= 调用存储过程 =====end========//
+    
+    ////////////////////////////转换类型方法///////////////////////////////
+    /**
+     * 直接执行jdbc的sql语句查询，sql语句已经是准备好的，采用preparedstatment执行
+     *
+     * @param SQLReady
+     * @return IDataList返回查询结果 返回的字段都是大写的表字段
+     */
+    public IDataList queryListSql(SQLReady p) {
+        SQLSource source = new SQLSource("native." + p.getSql(), p.getSql());
+        SQLScript script = new SQLScript(source, this);
+        IDataList queryList = script.queryList(p);
+        return queryList;
+    }
+    
+    /**
+     * 通过sqlId进行查询,查询结果IDataList集合
+     *
+     * @param sqlId sql标记
+     * @param paras IData参数集合
+     * @return IDataList集合
+     */
+    public IDataList select(String sqlId, IDataMap paras) {
+        Map<String, Object> parasIn = DaoHelper.trans2Map(paras);
+        List<Map> queryList = this.select(sqlId, Map.class, parasIn);
+        return DaoHelper.trans2IDataset(queryList);
+    }
+    
+    /**
+     * 翻页查询(返回IDataList)
+     *
+     * @param sqlId sql标记
+     * @param paras IData条件集合
+     * @param start 开始位置
+     * @param size  查询条数
+     * @return IDataList
+     */
+    public IDataList select(String sqlId, IDataMap paras, long start, long size) {
+        SQLScript script = getScript(sqlId);
+        Map<String, Object> parasIn = DaoHelper.trans2Map(paras);
+        List<Map> queryList = script.select(parasIn, Map.class, null, start, size);
+        return DaoHelper.trans2IDataset(queryList);
     }
     
 }
