@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="0eb4e442-259b-4f1e-892d-8fdbc3a3f166" name="Changes" comment="add by tyz">
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/beetlsql.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/datasteam.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy.bat" beforeDir="false" afterPath="$PROJECT_DIR$/deploy.bat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradlew" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradlew.bat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/install.bat" beforeDir="false" afterPath="$PROJECT_DIR$/install.bat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/maven-ant-tasks-2.1.3.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/BeetlSQLException.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/BeetlSQLException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/ClasspathLoader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/ClasspathLoader.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/ConnectionSource.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/ConnectionSource.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/ConnectionSourceHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/ConnectionSourceHelper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/DBRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/DBRunner.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/DSTransactionManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/DSTransactionManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/DefaultConnectionSource.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/DefaultConnectionSource.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/DefaultNameConversion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/DefaultNameConversion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/DefaultSQLIdNameConversion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/DefaultSQLIdNameConversion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/HumpNameConversion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/HumpNameConversion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/IDAutoGen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/IDAutoGen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/Interceptor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/Interceptor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/InterceptorContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/InterceptorContext.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/JPA2NameConversion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/JPA2NameConversion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/JPAEntityHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/JPAEntityHelper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/JPANameConversion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/JPANameConversion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/JavaType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/JavaType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/NameConversion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/NameConversion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/OnConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/OnConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/Params.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/Params.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/PlaceHolderListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/PlaceHolderListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/RowMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/RowMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/RowMapperContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/RowMapperContext.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLIdNameConversion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLIdNameConversion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLLoader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLLoader.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLManagerBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLManagerBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLPart.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLPart.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLReady.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLReady.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLResult.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLScript.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLScript.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLSource.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/SQLSource.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/Tail.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/Tail.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/TailBean.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/TailBean.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/UnderlinedNameConversion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/UnderlinedNameConversion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/UpperCaseUnderlinedNameConversion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/UpperCaseUnderlinedNameConversion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/AssignID.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/AssignID.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/AutoID.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/AutoID.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/ColumnIgnore.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/ColumnIgnore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/DateTemplate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/DateTemplate.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/EnumMapping.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/EnumMapping.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/InsertIgnore.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/InsertIgnore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/Param.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/Param.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/RowSize.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/RowSize.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/RowStart.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/RowStart.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/SeqID.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/SeqID.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/Sql.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/Sql.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/SqlStatement.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/SqlStatement.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/SqlStatementType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/SqlStatementType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/Table.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/Table.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/TableTemplate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/TableTemplate.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/Tail.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/Tail.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/UpdateIgnore.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/annotatoin/UpdateIgnore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/AbstractDBStyle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/AbstractDBStyle.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/ClassDesc.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/ClassDesc.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/ColDesc.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/ColDesc.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/DB2SqlStyle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/DB2SqlStyle.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/DBStyle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/DBStyle.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/DefaultKeyWordHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/DefaultKeyWordHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/H2Style.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/H2Style.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/KeyHolder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/KeyHolder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/KeyWordHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/KeyWordHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/MetadataManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/MetadataManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/MySqlStyle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/MySqlStyle.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/OracleStyle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/OracleStyle.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/PostgresStyle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/PostgresStyle.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/SQLiteStyle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/SQLiteStyle.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/SqlServerStyle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/SqlServerStyle.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/TableDesc.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/TableDesc.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/TypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/db/TypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/Beetl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/Beetl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/BeetlSQLTemplateExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/BeetlSQLTemplateExceptionHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/DynamicSqlFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/DynamicSqlFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/EmptyExpressionFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/EmptyExpressionFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/GlobalUseFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/GlobalUseFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/NotEmptyExpressionFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/NotEmptyExpressionFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/PageQuery.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/PageQuery.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/PageQueryFuntion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/PageQueryFuntion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/PageQueryIgnoreTag.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/PageQueryIgnoreTag.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/PageQueryTag.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/PageQueryTag.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/SQLParameter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/SQLParameter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/SQLPlaceholderST.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/SQLPlaceholderST.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/SQLTemplateEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/SQLTemplateEngine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/SQLVarRef.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/SQLVarRef.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/SqlTemplateResource.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/SqlTemplateResource.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/StringSqlTemplateLoader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/StringSqlTemplateLoader.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/TestColNullFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/TestColNullFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/TestNullFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/TestNullFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/TextFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/TextFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/TrimTag.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/TrimTag.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/UseFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/UseFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/WhereTag.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/engine/WhereTag.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/BeanKit.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/BeanKit.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/CaseInsensitiveHashMap.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/CaseInsensitiveHashMap.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/CaseInsensitiveOrderSet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/CaseInsensitiveOrderSet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/Constants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/Constants.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/DataHelper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/EnumKit.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/EnumKit.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/GenKit.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/GenKit.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/LobKit.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/LobKit.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/MDParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/MDParser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/NumberKit.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/NumberKit.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/StringKit.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/StringKit.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/ThreadSafeCaseInsensitiveHashMap.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/kit/ThreadSafeCaseInsensitiveHashMap.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/BaseMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/BaseMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/BaseMapperInvoke.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/DefaultMapperBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/DefaultMapperBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/InsertMapperInvoke.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/InsertMapperInvoke.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/MapperBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/MapperBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/MapperInvoke.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/MapperInvoke.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/MapperJavaProxy.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/MapperJavaProxy.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/MethodDesc.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/MethodDesc.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/PageQueryMapperInvoke.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/PageQueryMapperInvoke.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/SQLReadyExecuteMapperInvoke.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/SQLReadyExecuteMapperInvoke.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/SelecSingleMapperInvoke.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/SelecSingleMapperInvoke.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/SelectMapperInvoke.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/SelectMapperInvoke.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/UpdateBatchMapperInvoke.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/UpdateBatchMapperInvoke.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/UpdateMapperInvoke.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/UpdateMapperInvoke.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/builder/MapperConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/builder/MapperConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/builder/MapperConfigBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/builder/MapperConfigBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/builder/MapperInvokeDataConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/builder/MapperInvokeDataConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/builder/MethodDescBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/builder/MethodDescBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/AllAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/AllAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/AllCountAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/AllCountAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/DeleteByIdAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/DeleteByIdAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/ExecuteAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/ExecuteAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/ExecuteUpdateAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/ExecuteUpdateAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/GetSQLManagerAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/GetSQLManagerAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/InsertAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/InsertAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/InsertBatchAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/InsertBatchAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/InsertReturnKeyAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/InsertReturnKeyAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/InsertTemplateAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/InsertTemplateAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/SingleAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/SingleAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/TemplateAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/TemplateAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/TemplateCountAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/TemplateCountAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/TemplateOneAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/TemplateOneAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/UniqueAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/UniqueAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/UpdateByIdAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/UpdateByIdAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/UpdateByIdBatchAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/UpdateByIdBatchAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/UpdateTemplateByIdAmi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapper/internal/UpdateTemplateByIdAmi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/BeanProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/BeanProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/ResultSetExt.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/ResultSetExt.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/ResultSetHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/ResultSetHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/RowMapperResultSetExt.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/RowMapperResultSetExt.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/BigDecimalTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/BigDecimalTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/BooleanTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/BooleanTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/ByteArrayTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/ByteArrayTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/ByteTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/ByteTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/CharArrayTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/CharArrayTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/DateTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/DateTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/DefaultTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/DefaultTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/DoubleTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/DoubleTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/FloatTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/FloatTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/IntegerTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/IntegerTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/JavaSqlTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/JavaSqlTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/LongTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/LongTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/PrimitiveValue.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/PrimitiveValue.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/ShortTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/ShortTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/SqlDateTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/SqlDateTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/SqlXMLTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/SqlXMLTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/StringTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/StringTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/TimeTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/TimeTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/TimestampTypeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/TimestampTypeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/TypeParameter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/mapping/type/TypeParameter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/LazyEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/LazyEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/LazyMappingEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/LazyMappingEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/LazyORMManyEntityFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/LazyORMManyEntityFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/LazyORMSingleEntityFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/LazyORMSingleEntityFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/MappingEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/MappingEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/MappingFunctionHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/MappingFunctionHelper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/ORMManyEntityFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/ORMManyEntityFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/ORMSingleEntityFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/ORMSingleEntityFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/OrmCondition.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/OrmCondition.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/OrmQuery.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/core/orm/OrmQuery.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/DebugInterceptor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/DebugInterceptor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/EmptyExpressionFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/EmptyExpressionFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/JoinFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/JoinFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/SimpleCacheInterceptor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/SimpleCacheInterceptor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/SnowflakeIDAutoGen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/SnowflakeIDAutoGen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/SnowflakeIDWorker.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/SnowflakeIDWorker.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/TimeStatInterceptor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/TimeStatInterceptor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/gen/CodeGen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/gen/CodeGen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/gen/GenConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/gen/GenConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/gen/GenFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/gen/GenFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/gen/MapperCodeGen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/gen/MapperCodeGen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/gen/SourceGen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/gen/SourceGen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/gen/pojo.btl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/jfinal/JFinalBeetlSql.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/jfinal/JFinalBeetlSql.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/jfinal/JFinalConnectonSource.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/jfinal/JFinalConnectonSource.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/jfinal/Trans.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/jfinal/Trans.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring/SpringBeetlSql.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring/SpringBeetlSql.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring/SpringConnectionSource.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring/SpringConnectionSource.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/BeetlSqlClassPathScanner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/BeetlSqlClassPathScanner.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/BeetlSqlDaoSupport.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/BeetlSqlDaoSupport.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/BeetlSqlDataSource.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/BeetlSqlDataSource.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/BeetlSqlFactoryBean.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/BeetlSqlFactoryBean.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/BeetlSqlScannerConfigurer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/BeetlSqlScannerConfigurer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/SqlManagerFactoryBean.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/SqlManagerFactoryBean.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/config/BeetlSqlScannerBeanDefinitionParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/config/BeetlSqlScannerBeanDefinitionParser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/config/NamespaceHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/config/NamespaceHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/config/beetlsql-spring.xsd" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/ext/spring4/config/beetlsql-spring.xsd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/BaseDao.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/BaseDao.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/Color.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/Color.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/Department.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/Department.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/DepartmentDao.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/LijzTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/MyBeanProcessor.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/MySqlConnectoinSource.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/MySqlConnectoinSource.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/MysqlDBConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/MysqlDBConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/ProductOrder.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/QuickTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/QuickTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/Role.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/Role.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/TSLog.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/Test.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/UserDao.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/UserDao.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/UserRole.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/department.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/user.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/beetl/sql/test/user123.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/spring.schemas" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/META-INF/spring.schemas" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/btsql.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/btsql.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/org/beetl/sql/ext/gen/controllerl.btl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/org/beetl/sql/ext/gen/mapper.btl" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/org/beetl/sql/ext/gen/mapper.btl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/org/beetl/sql/ext/gen/pojo.btl" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/org/beetl/sql/ext/gen/pojo.btl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/org/beetl/sql/ext/gen/service.btl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/org/beetl/sql/ext/gen/serviceImpl.btl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/org/beetl/sql/ext/spring4/config/beetlsql-spring.xsd" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/org/beetl/sql/ext/spring4/config/beetlsql-spring.xsd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/sql/mysql/user.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/sql/mysql/user.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/sql/user.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/sql/user.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/core/mapper/internal/AmiInnerProxyMapperInvokeTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/core/mapper/internal/AmiInnerProxyMapperInvokeTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/core/mapper/internal/MyMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/core/mapper/internal/MyMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/core/mapper/internal/UserDao.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/core/mapper/internal/UserDao.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/experimental/Config.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/experimental/Config.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/experimental/domain/BeeBird.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/experimental/domain/BeeBird.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/experimental/methoddesc/MethodDescExperimental.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/experimental/methoddesc/MethodDescExperimental.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/ext/SimpleCacheInterceptorTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/ext/SimpleCacheInterceptorTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/jpa/JpaEntityTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/jpa/JpaEntityTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/jpa/TestEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/jpa/TestEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/AllMysqlTestSuit.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/AllMysqlTestSuit.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/BaseMySqlTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/BaseMySqlTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/GeneralUserTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/GeneralUserTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/InsertTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/InsertTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/KeysTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/KeysTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/MapperTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/MapperTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/OrmTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/OrmTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/TypeTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/dao/UserDao.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/dao/UserDao.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/entity/Department.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/entity/Department.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/entity/MutipleKeys.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/entity/MutipleKeys.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/entity/MysqlType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/entity/MysqlType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/entity/ProductOrder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/entity/ProductOrder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/entity/Role.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/entity/Role.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/entity/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/entity/UserRole.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/beetl/sql/test/mysql/entity/UserRole.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/resources/applicationContext-mysql-beetlsql.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/applicationContext-mysql-beetlsql.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/resources/dbinit/mysql-orm.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/resources/logback.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/logback.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/resources/mysql-application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/mysql-application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/resources/sql/mysql/user.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/sql/mysql/user.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/resources/xls/user/insert.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/xls/user/insert.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/resources/xls/user/keys.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/xls/user/keys.xlsx" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="JpbToolWindowState">
+    <option name="myId2FirstActivated">
+      <map>
+        <entry key="com.haulmont.jpb.jpaStructure" value="true" />
+      </map>
+    </option>
+    <option name="myId2Visible">
+      <map>
+        <entry key="com.haulmont.jpb.jpaStructure" value="false" />
+      </map>
+    </option>
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="useMavenConfig" value="true" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectId" id="2TcBnc2reCJjQ95OiUhGD72SYMn" />
+  <component name="ProjectViewState">
+    <option name="autoscrollFromSource" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="0eb4e442-259b-4f1e-892d-8fdbc3a3f166" name="Changes" comment="" />
+      <created>1691332657103</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1691332657103</updated>
+      <workItem from="1691332658732" duration="331000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="add by tyz" />
+    <option name="LAST_COMMIT_MESSAGE" value="add by tyz" />
+  </component>
+</project>
